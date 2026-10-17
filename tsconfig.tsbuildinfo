@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/main.tsx","./src/auth/AuthContext.tsx","./src/auth/RequireRole.tsx","./src/lib/supabase.ts","./src/lib/types.ts","./src/pages/Login.tsx","./src/pages/OpenShift.tsx","./src/pages/Placeholder.tsx","./src/pages/Pos.tsx","./src/pages/Shell.tsx"],"version":"5.9.3"}
