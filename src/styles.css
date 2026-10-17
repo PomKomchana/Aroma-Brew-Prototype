@@ -24,7 +24,7 @@ button { cursor: pointer; }
 :focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
 .display { font-family: var(--font-display); }
 
-/* ---------- Login (S01) ---------- */
+/* Login [S01] */
 .login-wrap {
   position: relative; min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 24px;
   background: var(--espresso) url('https://images.unsplash.com/photo-1511081692775-05d0f180a065?w=1600&h=900&fit=crop&auto=format') center / cover;
@@ -55,7 +55,7 @@ button { cursor: pointer; }
 .demo button:hover { color: var(--gold); }
 .demo b { color: var(--amber); font-weight: 400; }
 
-/* ---------- App shell ---------- */
+/*App shell */
 .app { display: flex; height: 100vh; overflow: hidden; background: var(--paper); color: var(--roast); }
 .sidebar { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--roast); color: var(--mist); }
 .side-head { padding: 20px; border-bottom: 1px solid var(--bark); }
@@ -83,7 +83,7 @@ button { cursor: pointer; }
 .page .sub { color: var(--smoke); font-size: 14px; margin: 2px 0 20px; }
 .center-page { height: 100%; display: flex; align-items: center; justify-content: center; background: var(--paper); padding: 24px; }
 
-/* ---------- Light-surface bits ---------- */
+/* Light-surface bits */
 .card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
 .card-narrow { width: 340px; max-width: 100%; }
 .field { display: block; margin-bottom: 16px; }
@@ -101,7 +101,7 @@ button { cursor: pointer; }
 .btn-block { width: 100%; }
 .avatar { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; background: var(--sand); color: var(--amber); font-family: var(--font-display); font-size: 20px; font-weight: 600; }
 
-/* ---------- POS (S03) ---------- */
+/* POS [S03] */
 .pos { display: flex; height: 100%; overflow: hidden; }
 .pos-left { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .tabs { display: flex; gap: 4px; padding: 16px 16px 8px; flex-shrink: 0; flex-wrap: wrap; }
@@ -148,7 +148,7 @@ button { cursor: pointer; }
 .confirm { min-height: 56px; margin-top: 8px; border: none; border-radius: 8px; font-weight: 600; letter-spacing: 0.15em; background: var(--amber); color: #fff; }
 .confirm:disabled { background: var(--sand); color: var(--mist); cursor: not-allowed; }
 
-/* ---------- Modifier popup (S04) ---------- */
+/* Modifier popup [S04] */
 .overlay { position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(45, 31, 14, 0.5); padding: 16px; }
 .modal { width: 400px; max-width: 100%; max-height: 100%; overflow-y: auto; background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); }
 .modal-head { display: flex; gap: 16px; align-items: center; margin-bottom: 20px; }
@@ -163,7 +163,7 @@ button { cursor: pointer; }
 .opt small { opacity: 0.75; }
 .modal-actions { display: flex; gap: 8px; margin-top: 8px; }
 
-/* ---------- Receipt (S07) ---------- */
+/* Receipt [S07] */
 .done { text-align: center; max-width: 360px; width: 100%; }
 .done-tick { width: 80px; height: 80px; border-radius: 50%; background: var(--amber); color: #fff; font-size: 36px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
 .done h2 { font-size: 1.9rem; }
@@ -174,7 +174,7 @@ button { cursor: pointer; }
 .receipt .small { font-size: 12px; color: var(--smoke); }
 .pts { color: var(--amber); margin: 0 0 16px; }
 
-/* ---------- Close shift (S09) ---------- */
+/* Close shift [S09] */
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 760px; }
 .stat-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--line); }
 .stat-row:last-child { border-bottom: none; }
@@ -191,3 +191,56 @@ button { cursor: pointer; }
   .grid { grid-template-columns: repeat(2, 1fr); }
   .two { grid-template-columns: 1fr; }
 }
+
+/* Shared admin UI [Stock / Owner / Orders] */
+.page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.page-head .sub { margin-bottom: 0; }
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.toolbar .input { flex: none; width: 150px; }
+.tabs.flat { padding: 0 0 16px; }
+.table-wrap { background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th { text-align: left; font-size: 12px; letter-spacing: 0.08em; font-weight: 500; color: var(--smoke); padding: 12px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl td { padding: 10px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl .num { text-align: right; font-variant-numeric: tabular-nums; }
+.tbl .input { width: 100%; min-width: 90px; }
+.tbl-empty { text-align: center; color: var(--mist); padding: 32px 0 !important; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--sand); color: var(--smoke); white-space: nowrap; }
+.badge.ok { background: #e6f4e7; color: #2e7d32; }
+.badge.warn { background: #fdf0dc; color: #a8650f; }
+.badge.bad { background: #fbe4e1; color: var(--danger); }
+.link-btn { background: none; border: none; color: var(--amber); font-size: 14px; min-height: 44px; padding: 0 8px; }
+.link-btn.danger { color: var(--danger); }
+.link-btn:disabled { color: var(--mist); cursor: not-allowed; }
+.notice { padding: 10px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; background: #e6f4e7; color: #2e7d32; }
+.notice.warn { background: #fdf0dc; color: #a8650f; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.form-grid .full { grid-column: 1 / -1; }
+.card.form-card { max-width: 560px; }
+.field select, .input-select {
+  width: 100%; min-height: 48px; padding: 0 14px; border-radius: 12px; outline: none;
+  background: var(--paper); border: 1px solid var(--line); color: var(--roast);
+}
+.field select:focus { border-color: var(--amber); }
+.field .hint { margin: 4px 0 0; font-size: 12px; color: var(--smoke); letter-spacing: 0; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.kpi { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; }
+.kpi p { margin: 0; font-size: 12px; letter-spacing: 0.1em; color: var(--smoke); }
+.kpi b { display: block; margin-top: 4px; font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; color: var(--roast); }
+.kpi small { color: var(--smoke); font-size: 12px; }
+.kpi.accent b { color: var(--amber); }
+.dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+.bars { display: flex; align-items: flex-end; gap: 6px; height: 180px; padding-top: 8px; }
+.bar-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.bar { width: 100%; max-width: 40px; border-radius: 6px 6px 0 0; background: var(--amber); min-height: 2px; }
+.bar-col span { font-size: 11px; color: var(--smoke); white-space: nowrap; }
+.rank { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.rank:last-child { border-bottom: none; }
+.rank i { font-style: normal; color: var(--amber); margin-right: 8px; }
+.modal-wide { width: 560px; }
+.recipe-row { display: grid; grid-template-columns: 70px 1fr 90px 44px; gap: 8px; margin-bottom: 8px; align-items: center; }
+.recipe-row .input, .recipe-row select { width: 100%; min-width: 0; }
+.cancelled td { color: var(--mist); text-decoration: line-through; }
+.cancelled td:last-child, .cancelled .badge { text-decoration: none; }
+@media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, 1fr); } .dash-grid { grid-template-columns: 1fr; } .form-grid { grid-template-columns: 1fr; } }

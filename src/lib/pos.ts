@@ -1,6 +1,6 @@
 import type { Member, Modifier, Product, Promotion } from './types'
 
-export const POINT_RATE = 50 // 50 บาท = 1 แต้ม (FR-12) ต้องตรงกับฟังก์ชัน checkout ในฐานข้อมูล
+export const POINT_RATE = 50 // 50 บาท = 1 แต้ม [FR-12] ต้องตรงกับฟังก์ชัน checkout ในฐานข้อมูล
 
 export const CATEGORY_LABEL: Record<string, string> = {
   coffee: 'Coffee',
@@ -62,7 +62,7 @@ export function discountOf(subtotal: number, promo: Promotion): number {
   return Math.min(Math.round(raw * 100) / 100, subtotal)
 }
 
-/** เลือกโปรโมชันที่ลดได้มากที่สุดในวันนี้ (ส่วนลดอัตโนมัติ S06) */
+/** เลือกโปรโมชันที่ลดได้มากที่สุดในวันนี้ [ส่วนลดอัตโนมัติ S06] */
 export function bestPromotion(
   promos: Promotion[],
   subtotal: number,

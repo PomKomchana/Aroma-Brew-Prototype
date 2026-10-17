@@ -5,17 +5,22 @@ import { ROLE_LABEL, type Role } from '../lib/types'
 
 const NAV: Record<Role, { to: string; icon: string; label: string }[]> = {
   cashier: [
-    { to: '/pos', icon: '☕', label: '[POS] Point of Sale' },
+    { to: '/pos', icon: '☕', label: 'POS' },
+    { to: '/orders', icon: '🧾', label: 'Orders' },
     { to: '/close-shift', icon: '🔓', label: 'Close Shift' },
   ],
   owner: [
-    { to: '/dashboard', icon: '📊', label: 'Reports' },
+    { to: '/dashboard', icon: '📊', label: 'Dashboard' },
+    { to: '/products', icon: '🍰', label: 'Products & Recipes' },
     { to: '/stock', icon: '📦', label: 'Inventory' },
+    { to: '/promotions', icon: '🏷️', label: 'Promotions' },
+    { to: '/employees', icon: '👥', label: 'Employees' },
+    { to: '/reports', icon: '📑', label: 'Reports & Audit' },
   ],
   stock: [{ to: '/stock', icon: '📦', label: 'Inventory' }],
 }
 
-/** สถานะออนไลน์/ออฟไลน์ที่มุมจอ (NFR-04) */
+/** สถานะออนไลน์/ออฟไลน์ที่มุมจอ [NFR-04] */
 function Connection() {
   const [online, setOnline] = useState(navigator.onLine)
   useEffect(() => {
