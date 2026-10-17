@@ -48,8 +48,8 @@
 | Owner | S15 พนักงาน | `/employees` | ✅ |
 | Owner | S16 โปรโมชัน | `/promotions` | ✅ |
 | Owner | S17 รายงานยอดขาย (+CSV) / Audit Log / ยกเลิกบิลหลังปิดกะ | `/reports` | ✅ |
-| ลูกค้า | S18 เว็บตรวจแต้ม (เบอร์ + OTP) | — | ✅ |
-| ทุกบทบาท | Offline queue + sync (NFR-04) | — | ⏳ ตอนนี้แสดงเฉพาะสถานะ Online/Offline |
+| ลูกค้า | S18 เว็บตรวจแต้ม (เบอร์ + OTP) | `/member` | — | ✅ |
+| ทุกบทบาท | Offline queue + sync (NFR-04) | — | ⏳ ยังไม่ได้ทำ ตอนนี้แสดงเฉพาะสถานะ Online/Offline |
 
 นอกขอบเขต SRS (ที่ตัดออก): จองโต๊ะ, Pre-order, ลงเวลางาน (Attendance มีตารางไว้สำหรับเฟส 2 แต่ยังไม่มีหน้าจอ)
 

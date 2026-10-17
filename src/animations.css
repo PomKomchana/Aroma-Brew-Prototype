@@ -1,0 +1,154 @@
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur: 280ms;
+  --dur-slow: 480ms;
+}
+
+/* Keyframes */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes line-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes pulse-dot {
+  0%   { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.55); }
+  70%  { box-shadow: 0 0 0 7px rgba(76, 175, 80, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+/* Page transitions (runs each time a route mounts) */
+.main > .page,
+.main > .pos,
+.main > .center-page {
+  animation: fade-up var(--dur-slow) var(--ease-out) both;
+}
+
+/* Sidebar items slide in one after another */
+.side-nav .nav-item {
+  animation: slide-in-left var(--dur) var(--ease-out) both;
+}
+.side-nav .nav-item:nth-child(1) { animation-delay: 60ms; }
+.side-nav .nav-item:nth-child(2) { animation-delay: 110ms; }
+.side-nav .nav-item:nth-child(3) { animation-delay: 160ms; }
+.side-nav .nav-item:nth-child(4) { animation-delay: 210ms; }
+.side-nav .nav-item:nth-child(5) { animation-delay: 260ms; }
+.side-nav .nav-item:nth-child(6) { animation-delay: 310ms; }
+
+/* Login */
+.login-inner { animation: fade-up 700ms var(--ease-out) both; }
+.login-head  { animation: fade-in 900ms ease both; }
+.login-card  { animation: fade-up 700ms var(--ease-out) 150ms both; }
+.alert-dark, .error { animation: shake 400ms ease both; }
+
+/* Hover / press feedback */
+button, .nav-item, .menu-item, .tab, .opt, .pay, .card {
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out),
+    opacity var(--dur-fast) ease;
+}
+button:not(:disabled):active { transform: scale(0.96); }
+
+.nav-item:hover { transform: translateX(3px); }
+.nav-item.active { box-shadow: 0 4px 14px rgba(212, 145, 58, 0.35); }
+
+.btn:not(:disabled):hover,
+.btn-amber:not(:disabled):hover,
+.confirm:not(:disabled):hover,
+.mini-btn:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(45, 31, 14, 0.18);
+}
+
+.tab:not(.on):hover { background: var(--line); color: var(--roast); }
+
+/* POS menu grid */
+.grid .menu-item { animation: pop-in var(--dur) var(--ease-out) both; }
+.menu-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 22px rgba(45, 31, 14, 0.12);
+}
+.menu-item:hover .menu-img { transform: scale(1.08) rotate(-3deg); }
+.menu-img { transition: transform var(--dur) var(--ease-out); }
+
+/* Stagger the first 12 cards (the rest appear together so it never feels slow) */
+.grid .menu-item:nth-child(1)  { animation-delay: 0ms; }
+.grid .menu-item:nth-child(2)  { animation-delay: 40ms; }
+.grid .menu-item:nth-child(3)  { animation-delay: 80ms; }
+.grid .menu-item:nth-child(4)  { animation-delay: 120ms; }
+.grid .menu-item:nth-child(5)  { animation-delay: 160ms; }
+.grid .menu-item:nth-child(6)  { animation-delay: 200ms; }
+.grid .menu-item:nth-child(7)  { animation-delay: 240ms; }
+.grid .menu-item:nth-child(8)  { animation-delay: 280ms; }
+.grid .menu-item:nth-child(9)  { animation-delay: 320ms; }
+.grid .menu-item:nth-child(10) { animation-delay: 360ms; }
+.grid .menu-item:nth-child(11) { animation-delay: 400ms; }
+.grid .menu-item:nth-child(12) { animation-delay: 440ms; }
+.grid .menu-item:nth-child(n + 13) { animation-delay: 480ms; }
+
+/* Cart */
+.cart-items .line { animation: line-in var(--dur) var(--ease-out) both; }
+.cart-empty { animation: fade-in var(--dur-slow) ease both; }
+.qty button:not(:disabled):hover { background: var(--amber); color: #fff; }
+
+/* Modals */
+.overlay { animation: fade-in var(--dur-fast) ease both; backdrop-filter: blur(2px); }
+.modal   { animation: pop-in var(--dur) var(--ease-out) 40ms both; }
+
+/* Size / modifier option chips */
+.opt.on { transform: scale(1.03); }
+
+/* Status indicators */
+.dot, .conn i { animation: pulse-dot 2.2s ease-out infinite; }
+.conn.off i { animation: none; }
+
+/* Tables */
+table tbody tr { animation: fade-in var(--dur) ease both; transition: background-color var(--dur-fast) ease; }
+table tbody tr:hover { background: rgba(212, 145, 58, 0.08); }
+
+/* Optional: loading skeleton (add class="skeleton" to any block) */
+.skeleton {
+  background: linear-gradient(90deg, var(--sand) 25%, var(--line) 50%, var(--sand) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 8px;
+  min-height: 1em;
+}
+
+/* Accessibility: respect "reduce motion" */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
