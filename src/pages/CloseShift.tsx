@@ -72,7 +72,7 @@ export default function CloseShift() {
                   nav('/login', { replace: true })
                 }}
               >
-                Sign Out
+                Log Out
               </button>
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function CloseShift() {
                 </p>
               )}
               <button className="btn btn-block" disabled={busy || counted === '' || !(countedNum >= 0)} onClick={confirm}>
-                {busy ? 'กำลังปิดกะ...' : 'ยืนยันปิดกะ'}
+                {busy ? 'Closing the shift...' : 'Confirmed shift closed'}
               </button>
             </div>
           </div>

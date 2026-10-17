@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { HOME_BY_ROLE } from '../lib/types'
 
@@ -43,12 +43,15 @@ export default function Login() {
   return (
     <div className="login-wrap">
       <div className="login-inner">
+        <p className="member-back">
+          <Link to="/member">Member? Check your points →</Link>
+          </p>
         <div className="login-head">
-          <p className="login-kicker">Coffee Shop Management System</p>
+          <p className="login-kicker">Staff Management System</p>
           <h1 className="login-title">Aroma Brew</h1>
         </div>
         <div className="login-card">
-          <h2>Sign In</h2>
+          <h2>Log In</h2>
           <form onSubmit={submit}>
             <label className="dark-field">
               <span>Employee ID</span>
@@ -64,7 +67,7 @@ export default function Login() {
               </p>
             )}
             <button className="btn-amber" disabled={busy || !code || !password}>
-              {busy ? 'Checking...' : 'Sign In'}
+              {busy ? 'Checking...' : 'Log In'}
             </button>
           </form>
           <div className="demo">

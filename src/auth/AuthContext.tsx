@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const openShift = useCallback(
     async (openingCash: number) => {
-      if (!employee) throw new Error('You are not signed in')
+      if (!employee) throw new Error('You are not loged in')
       const { data, error } = await supabase.rpc('open_shift', {
         p_employee_id: employee.employee_id,
         p_opening_cash: openingCash,

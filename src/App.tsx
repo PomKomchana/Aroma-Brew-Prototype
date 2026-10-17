@@ -12,6 +12,7 @@ import Products from './pages/Products'
 import Employees from './pages/Employees'
 import Promotions from './pages/Promotions'
 import Reports from './pages/Reports'
+import Member from './pages/Member'
 
 export default function App() {
   return (
@@ -30,6 +31,8 @@ export default function App() {
           <Route path="/promotions" element={<RequireRole roles={['owner']}><Promotions /></RequireRole>} />
           <Route path="/reports" element={<RequireRole roles={['owner']}><Reports /></RequireRole>} />
           <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/member" element={<Member />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

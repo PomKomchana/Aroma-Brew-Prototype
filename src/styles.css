@@ -244,3 +244,22 @@ button { cursor: pointer; }
 .cancelled td { color: var(--mist); text-decoration: line-through; }
 .cancelled td:last-child, .cancelled .badge { text-decoration: none; }
 @media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, 1fr); } .dash-grid { grid-template-columns: 1fr; } .form-grid { grid-template-columns: 1fr; } }
+
+/* Member portal [S18] */
+.member-note { font-size: 12px; letter-spacing: 0.04em; color: var(--smoke); margin: 16px 0 0; }
+.member-link { display: block; width: 100%; min-height: 44px; margin-top: 8px; background: none; border: none; color: var(--mist); font-size: 13px; }
+.member-link:hover:not(:disabled) { color: var(--gold); }
+.member-back { text-align: center; margin: 16px 0 0; font-size: 12px; }
+.member-back a { color: var(--smoke); text-decoration: none; }
+.member-back a:hover { color: var(--gold); }
+.demo-otp { margin: 0 0 16px; padding: 8px 12px; border-radius: 8px; background: rgba(212, 145, 58, 0.15); color: var(--gold); font-size: 13px; }
+.demo-otp b { letter-spacing: 0.25em; }
+.pts-box { padding: 20px; border-radius: 12px; background: var(--espresso); border: 1px solid var(--bark); text-align: center; }
+.pts-box span { display: block; font-size: 12px; letter-spacing: 0.18em; color: var(--smoke); }
+.pts-box b { display: block; font-family: var(--font-display); font-weight: 300; font-size: 3rem; line-height: 1.2; color: var(--amber); }
+.pts-box small { color: var(--mist); font-size: 12px; }
+.hist { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--bark); font-size: 14px; }
+.hist:last-of-type { border-bottom: none; }
+.hist b { display: block; font-weight: 500; color: var(--cream); }
+.hist small { display: block; font-size: 12px; color: var(--smoke); }
+.hist.cancelled-h b { text-decoration: line-through; color: var(--smoke); }
