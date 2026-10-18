@@ -7,7 +7,12 @@ export default function Receipt({ data, onNext }: { data: ReceiptData; onNext: (
       <div className="done">
         <div className="done-tick no-print">✓</div>
         <h2 className="no-print">Payment Successful</h2>
-        {data.member && data.earnedPoints > 0 && (
+        {data.pending && (
+          <p className="pts no-print" style={{ color: 'var(--amber)' }}>
+            Saved offline · will sync automatically when the connection is back
+          </p>
+        )}
+        {data.member && data.earnedPoints > 0 && !data.pending && (
           <p className="pts no-print">
             + {data.earnedPoints} Points → {data.member.name}
           </p>
@@ -16,7 +21,7 @@ export default function Receipt({ data, onNext }: { data: ReceiptData; onNext: (
         <div className="receipt">
           <div className="r">
             <b>Aroma Brew</b>
-            <span>บิล #{data.orderId}</span>
+             <span>{data.pending ? `Bill ${data.orderId}` : `Bill #${data.orderId}`}</span>
           </div>
           <div className="small">{data.time.toLocaleString('th-TH')}</div>
           <hr />

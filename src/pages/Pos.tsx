@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { loadMenu } from '../lib/menu'
+import { OFFLINE_METHODS, enqueueOrder, localLabel, useOnline } from '../lib/offlineQueue'
 import { useAuth } from '../auth/AuthContext'
 import type { Member, Modifier, Product, Promotion } from '../lib/types'
 import {
@@ -48,39 +50,22 @@ export default function Pos() {
   const [payError, setPayError] = useState('')
   const [receipt, setReceipt] = useState<ReceiptData | null>(null)
 
+  const online = useOnline()
+  const [cachedAt, setCachedAt] = useState<string | null>(null)
+
   useEffect(() => {
-    Promise.all([
-      supabase.from('product').select('*').eq('is_active', true).order('product_id'),
-      supabase.from('modifier').select('*').order('modifier_id'),
-      supabase.from('recipe').select('product_id,size, ingredient_id'),
-      supabase.from('promotion').select('*'),
-      supabase.from('ingredient').select('ingredient_id,name'),
-    ]).then(([p, m, r, pr, ing]) => {
-      const err = p.error ?? m.error ?? r.error ?? pr.error ?? ing.error
-      if (err) {
-        setLoadError('Failed to load data: ' + err.message)
-      } else {
-        const prods = (p.data ?? []) as Product[]
-        setProducts(prods)
-        setModifiers((m.data ?? []) as Modifier[])
-        setPromos((pr.data ?? []) as Promotion[])
-        const map: Record<number, string[]> = {}
-        const names = new Map(((ing.data ?? []) as { ingredient_id: number; name: string }[]).map((i) => [i.ingredient_id, i.name]))
-        const ingMap: Record<number, string[]> = {}
-        for (const row of (r.data ?? []) as { product_id: number; size: string; ingredient_id: number }[]) {
-          const list = (map[row.product_id] ??= [])
-          if (!list.includes(row.size)) list.push(row.size)
-          const n = names.get(row.ingredient_id)
-          const il = (ingMap[row.product_id] ??= [])
-          if (n && !il.includes(n)) il.push(n)
-        }
-        setIngredientsOf(ingMap)
-        for (const k of Object.keys(map)) map[Number(k)].sort()
-        setSizes(map)
-        setCat(prods[0]?.category ?? '')
-      }
-      setLoading(false)
-    })
+    loadMenu()
+      .then(({ data, fromCache, cachedAt }) => {
+        setProducts(data.products)
+        setModifiers(data.modifiers)
+        setPromos(data.promos)
+        setSizes(data.sizes)
+        setIngredientsOf(data.ingredientsOf)
+        setCat(data.products[0]?.category ?? '')
+        setCachedAt(fromCache ? cachedAt : null)
+      })
+      .catch((e: Error) => setLoadError('Failed to load data: ' + e.message))
+      .finally(() => setLoading(false))
   }, [])
 
   const categories = useMemo(() => [...new Set(products.map((x) => x.category))], [products])
@@ -127,14 +112,42 @@ export default function Pos() {
       setMemberError('Please enter a 10-digit phone number')
       return
     }
+    if (!navigator.onLine) {
+      // ออฟไลน์: ตรวจสมาชิกไม่ได้ เก็บเบอร์ไว้ก่อน ระบบจะตรวจและให้แต้มตอนซิงค์ (ไม่พบเบอร์ = ขายต่อโดยไม่ให้แต้ม)
+      setMember({ phone_number: phone, masked_phone: `${phone.slice(0, 2)}x-xxx-${phone.slice(-4)}`, name: 'Member (verify when online)', points: 0, tier: '' })
+      return
+    }
     const { data, error } = await supabase.rpc('find_member', { p_phone: phone })
     if (error) setMemberError(error.message)
     else if (!data) setMemberError('Member not found')
     else setMember(data as Member)
   }
 
+  /** ขายตอนออฟไลน์: เก็บบิลลงเครื่อง (queue) แล้วออกใบเสร็จชั่วคราว */
+  function saveOffline() {
+  if (!employee || !shiftId || !method) return
+   try {
+     const q = enqueueOrder({
+       employeeId: employee.employee_id,
+       shiftId,
+       phone: member?.phone_number ?? null,
+       promotionId: promo?.promo.promotion_id ?? null,
+       items: cart.map((l) => ({ product_id: l.product.product_id, size: l.size, quantity: l.qty, modifier_ids: l.modifiers.map((m) => m.modifier_id) })),
+       method,
+       total,
+      })
+      setReceipt({
+        orderId: localLabel(q.localNo), pending: true, lines: cart, subtotal, discount, promoName: promo?.promo.name ?? null, total, method,
+        received: method === 'cash' ? received : null, change, member, earnedPoints: 0, time: new Date(q.createdAt),
+      })
+    } catch (e) {
+      setPayError(e instanceof Error ? e.message : 'Could not save the bill offline')
+    }
+ }
+
   async function confirm() {
     if (!employee || !shiftId || !method) return
+    if (!navigator.onLine) return saveOffline()
     setBusy(true)
     setPayError('')
     const { data, error } = await supabase.rpc('checkout', {
@@ -152,6 +165,8 @@ export default function Pos() {
     })
     setBusy(false)
     if (error) {
+      // error ที่ไม่มี code = เครือข่ายหลุดระหว่างส่ง -> ขายต่อแบบออฟไลน์ (ถ้าฐานข้อมูลปฏิเสธจริงจะมี code เช่น stock ไม่พอ)
+      if (!error.code && method === 'cash') return saveOffline()
       setPayError(friendlyError(error.message))
       return
     }
@@ -203,6 +218,7 @@ export default function Pos() {
             ))}
           </div>
           {loading && <p className="muted" style={{ padding: 16 }}>Loading Menu...</p>}
+          {cachedAt && <p className="notice warn" role="status" style={{ padding: 16 }}>Showing saved menu from {new Date(cachedAt).toLocaleString('en-GB')}</p>}
           {loadError && (
             <p className="error" role="alert" style={{ padding: 16 }}>
               {loadError}
@@ -294,7 +310,7 @@ export default function Pos() {
             <p className="sec-label">Payment Method</p>
             <div className="pay-grid">
               {(Object.keys(PAYMENT_LABEL) as PaymentMethod[]).map((m) => (
-                <button key={m} className={method === m ? 'pay on' : 'pay'} onClick={() => setMethod(m)}>
+                <button key={m} className={method === m ? 'pay on' : 'pay'} disabled={!online && !OFFLINE_METHODS.includes(m)} title={!online && !OFFLINE_METHODS.includes(m) ? 'Cash only while offline' : undefined} onClick={() => setMethod(m)}>
                   {PAYMENT_LABEL[m]}
                 </button>
               ))}

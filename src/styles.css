@@ -278,3 +278,10 @@ button { cursor: pointer; }
 .hover-cat { margin: 0; font-size: 12px; color: var(--smoke); }
 .hover-price { font-weight: 600; color: var(--amber); }
 .hover-body .pinfo { margin-bottom: 10px; }
+
+/* Offline [NFR-04] */
+.conn { flex-wrap: wrap; }
+.conn-pending { background: rgba(212, 145, 58, 0.18); color: var(--gold); border: none; border-radius: 999px; padding: 2px 10px; font-size: 11px; min-height: 28px; }
+.conn-pending:hover { background: rgba(212, 145, 58, 0.3); }
+.offline-banner { padding: 8px 16px; font-size: 13px; background: #fdf0dc; color: #a8650f; border-bottom: 1px solid var(--line); }
+.pay:disabled { opacity: 0.4; cursor: not-allowed; }

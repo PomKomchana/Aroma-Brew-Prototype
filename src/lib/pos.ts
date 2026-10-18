@@ -32,6 +32,26 @@ export const ALLERGEN_LABEL: Record<string, string> = {
   nuts: 'Tree nuts', peanut: 'Peanuts', sesame: 'Sesame',
 }
 
+const ALLERGEN_RULES: [string, RegExp, RegExp][] = [
+  ['gluten', /\b(wheat|flour|bread|croissant|pastry|dough|bun|cake|cookie|biscuit|cracker|pasta|noodle|barley|rye|oat|malt|brownie|muffin|toast|waffle|pancake|scone|donut|doughnut)(?:s|es)?\b/, /แป้ง|ข้าวสาลี|ขนมปัง|ครัวซองต์|เค้ก|คุกกี้|ข้าวโอ๊ต/],
+  ['milk', /\b(milk|cream|butter|cheese|yogurt|yoghurt|whey|custard|ghee|latte|cappuccino|croissant)(?:s|es)?\b/, /นม|เนย|ครีม|ชีส|โยเกิร์ต/],
+  ['egg', /\b(egg|mayonnaise|meringue|custard|croissant)(?:s|es)?\b/, /ไข่(?!มุก)/],
+  ['soy', /\b(soy|soya|tofu|edamame|miso|lecithin)(?:s|es)?\b/, /ถั่วเหลือง|เต้าหู้/],
+  ['nuts', /\b(almond|walnut|cashew|pistachio|hazelnut|pecan|macadamia)(?:s|es)?\b/, /อัลมอนด์|วอลนัท|เม็ดมะม่วง|พิสทาชิโอ|เฮเซลนัท/],
+  ['peanut', /\b(peanut|groundnut)(?:s|es)?\b/, /ถั่วลิสง/],
+  ['sesame', /\b(sesame|tahini)(?:s|es)?\b/, /งา/],
+]
+
+/** เดาสารก่อภูมิแพ้จากข้อความ (ชื่อ/คำอธิบาย/วัตถุดิบ) เป็นแค่คำแนะนำ Owner ต้องตรวจเอง */
+export function detectAllergens(texts: string[]): string[] {
+  const t = texts
+    .join(' ')
+    .toLowerCase()
+    .replace(/\b(oat|soy|soya|almond|coconut|rice)\s+milk\b/g, '$1')
+    .replace(/\b(peanut|almond|cashew|cocoa|shea)\s+butter\b/g, '$1')
+  return ALLERGEN_RULES.filter(([, en, th]) => en.test(t) || th.test(t)).map(([k]) => k)
+}
+
 export const PAYMENT_LABEL = { cash: 'Cash', card: 'Card', promptpay: 'PromptPay' } as const
 export type PaymentMethod = keyof typeof PAYMENT_LABEL
 
@@ -45,7 +65,8 @@ export interface CartLine {
 }
 
 export interface ReceiptData {
-  orderId: number
+  orderId: number | string // offline = 'OFF-0001' จนกว่าจะซิงค์
+  pending?: boolean
   lines: CartLine[]
   subtotal: number
   discount: number

@@ -1,7 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { ROLE_LABEL, type Role } from '../lib/types'
+import { useOnline, useQueue, useSyncing } from '../lib/offlineQueue'
+import SyncPanel from './SyncPanel'
 
 const NAV: Record<Role, { to: string; icon: string; label: string }[]> = {
   cashier: [
@@ -20,23 +22,26 @@ const NAV: Record<Role, { to: string; icon: string; label: string }[]> = {
   stock: [{ to: '/stock', icon: '📦', label: 'Inventory' }],
 }
 
-/** สถานะออนไลน์/ออฟไลน์ที่มุมจอ [NFR-04] */
+/** สถานะออนไลน์/ออฟไลน์ที่มุมจอ + จำนวนบิลที่รอซิงค์ [NFR-04] */
 function Connection() {
-  const [online, setOnline] = useState(navigator.onLine)
-  useEffect(() => {
-    const on = () => setOnline(true)
-    const off = () => setOnline(false)
-    window.addEventListener('online', on)
-    window.addEventListener('offline', off)
-    return () => {
-      window.removeEventListener('online', on)
-      window.removeEventListener('offline', off)
-    }
-  }, [])
+  const online = useOnline()
+  const queue = useQueue()
+  const syncing = useSyncing()
+  const [open, setOpen] = useState(false)
+  const failed = queue.filter((q) => q.status === 'failed').length
+  const label = !online ? 'Offline' : syncing ? 'Syncing…' : 'Online'
   return (
-    <div className={online ? 'conn' : 'conn off'} role="status">
-      <i /> {online ? 'Online' : 'Offline'}
-    </div>
+    <>
+      <div className={online ? 'conn' : 'conn off'} role="status">
+        <i /> {label}
+        {queue.length > 0 && (
+          <button className="conn-pending" onClick={() => setOpen(true)} aria-label="Show offline bills">
+            {queue.length} pending{failed > 0 ? ` · ${failed} failed` : ''}
+          </button>
+        )}
+      </div>
+      {open && <SyncPanel onClose={() => setOpen(false)} />}
+    </>
   )
 }
 

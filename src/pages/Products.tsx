@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { Shell } from '../components/Shell'
 import { errMsg, rpc } from '../lib/api'
-import { CATEGORY_LABEL, money } from '../lib/pos'
+import { ALLERGEN_LABEL, CATEGORY_LABEL, detectAllergens, money } from '../lib/pos'
 import type { AdminProduct, IngredientRow, RecipeRow } from '../lib/types'
 
-const EMPTY: AdminProduct = { product_id: 0, name: '', category: 'coffee', price: 0, image: '', is_active: true, recipes: [] }
+const EMPTY: AdminProduct = { product_id: 0, name: '', category: 'coffee', price: 0, image: '', is_active: true, description: '', allergens: [], recipes: [] }
 
 /** [S14 สินค้า/สูตร] */
 export default function Products() {
@@ -59,6 +59,18 @@ function ProductDialog({ init, ings, emp, onClose, onSaved }: { init: AdminProdu
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const setRecipe = (i: number, patch: Partial<RecipeRow>) => setP({ ...p, recipes: p.recipes.map((r, k) => (k === i ? { ...r, ...patch } : r)) })
+  const suggested = detectAllergens([
+    p.name,
+    p.description ?? '',
+    ...p.recipes.map((r) => ings.find((x) => x.ingredient_id === r.ingredient_id)?.name ?? ''),
+  ])
+  useEffect(() => {
+    setP((cur) => {
+      const add = suggested.filter((a) => !(cur.allergens ?? []).includes(a))
+      return add.length ? { ...cur, allergens: [...(cur.allergens ?? []), ...add] } : cur
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suggested.join(',')])
 
   async function save() {
     setBusy(true)
@@ -86,6 +98,30 @@ function ProductDialog({ init, ings, emp, onClose, onSaved }: { init: AdminProdu
           <label className="field"><span>Price (Baht)</span><input inputMode="decimal" value={p.price} onChange={(e) => setP({ ...p, price: e.target.value as unknown as number })} /></label>
           <label className="field full"><span>Image URL (optional)</span><input value={p.image ?? ''} onChange={(e) => setP({ ...p, image: e.target.value })} /></label>
         </div>
+        <label className="field full">
+          <span>Description (shown to customers)</span>
+          <input value={p.description ?? ''} onChange={(e) => setP({ ...p, description: e.target.value })} />
+        </label>
+        <p className="sec-label">Allergens</p>
+        <div className="opts" style={{ marginBottom: 6 }}>
+          {Object.entries(ALLERGEN_LABEL).map(([k, v]) => {
+            const on = (p.allergens ?? []).includes(k)
+            return (
+              <button
+                type="button"
+                key={k}
+                className={on ? 'opt on' : 'opt'}
+                aria-pressed={on}
+                onClick={() => setP({ ...p, allergens: on ? p.allergens.filter((a) => a !== k) : [...(p.allergens ?? []), k] })}
+              >
+                {v} {suggested.includes(k) && <small>auto</small>}
+              </button>
+            )
+          })}
+        </div>
+        <p className="muted" style={{ fontSize: 12, margin: '0 0 12px' }}>
+          Auto-detected from name, description and ingredients. Please verify before saving.
+        </p>
         <p className="sec-label">Recipe per serving</p>
         {p.recipes.map((r, i) => {
           const unit = ings.find((x) => x.ingredient_id === r.ingredient_id)?.unit ?? ''

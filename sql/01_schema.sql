@@ -224,7 +224,7 @@ create table work_schedule (
   end_time    time not null
 );
 
--- frequently used indexes
+-- index ที่ใช้บ่อย
 create index on orders (shift_id);
 create index on orders (order_date);
 create index on stock_movement (ingredient_id, movement_date);
@@ -290,7 +290,7 @@ language plpgsql security definer set search_path = public as $$
 declare v_id int;
 begin
   perform 1 from shift where employee_id = p_employee_id and close_time is null;
-  if found then raise exception 'There is an open shift for this employee'; end if;
+  if found then raise exception 'มีกะที่ยังไม่ปิดอยู่แล้ว'; end if;
   insert into shift (employee_id, opening_cash) values (p_employee_id, p_opening_cash)
   returning shift_id into v_id;
   return v_id;
@@ -314,18 +314,18 @@ declare
 begin
   select branch_id into v_branch from employee
    where employee_id = p_employee_id and status = 'active';
-  if not found then raise exception 'Employee not found or account is closed'; end if;
+  if not found then raise exception 'ไม่พบพนักงาน หรือบัญชีถูกปิด'; end if;
 
   perform 1 from shift where shift_id = p_shift_id and employee_id = p_employee_id and close_time is null;
-  if not found then raise exception 'This shift is not open'; end if;
+  if not found then raise exception 'กะนี้ไม่ได้เปิดอยู่'; end if;
 
   if p_customer_phone is not null then
     perform 1 from customer where phone_number = p_customer_phone;
-    if not found then raise exception 'Customer with this phone number not found'; end if;
+    if not found then raise exception 'ไม่พบสมาชิกเบอร์นี้'; end if;
   end if;
 
   if p_items is null or jsonb_array_length(p_items) = 0 then
-    raise exception 'Shopping cart is empty';
+    raise exception 'ตะกร้าว่าง';
   end if;
 
   insert into orders (branch_id, shift_id, customer_phone, employee_id)
@@ -335,11 +335,11 @@ begin
   for v_item in select * from jsonb_array_elements(p_items) loop
     v_qty  := (v_item->>'quantity')::int;
     v_size := coalesce(v_item->>'size', 'M');
-    if v_qty is null or v_qty <= 0 then raise exception 'Invalid quantity'; end if;
+    if v_qty is null or v_qty <= 0 then raise exception 'จำนวนไม่ถูกต้อง'; end if;
 
     select * into v_prod from product
      where product_id = (v_item->>'product_id')::int and is_active;
-    if not found then raise exception 'Product not found or no longer available for sale'; end if;
+    if not found then raise exception 'ไม่พบสินค้า หรือสินค้าถูกปิดขาย'; end if;
 
     insert into order_detail (order_id, product_id, size, quantity, price)
     values (v_order_id, v_prod.product_id, v_size, v_qty, v_prod.price)
@@ -357,7 +357,7 @@ begin
       select (jsonb_array_elements_text(coalesce(v_item->'modifier_ids', '[]'::jsonb)))::int
     loop
       select extra_price into v_mod_price from modifier where modifier_id = v_mod_id;
-      if not found then raise exception 'Modifier % not found', v_mod_id; end if;
+      if not found then raise exception 'ไม่พบ modifier %', v_mod_id; end if;
 
       insert into order_detail_modifier (order_detail_id, modifier_id, price_at_sale)
       values (v_detail_id, v_mod_id, v_mod_price);
@@ -377,7 +377,7 @@ begin
     select * into v_promo from promotion
      where promotion_id = p_promotion_id and status = 'active'
        and current_date between start_date and end_date;
-    if not found then raise exception 'This promotion is not available'; end if;
+    if not found then raise exception 'โปรโมชันนี้ใช้ไม่ได้'; end if;
     v_discount := case v_promo.discount_type
                     when 'percent' then round(v_subtotal * v_promo.value / 100, 2)
                     else v_promo.value end;
@@ -407,7 +407,7 @@ language plpgsql security definer set search_path = public as $$
 declare v_open numeric; v_sales numeric; v_cash numeric; v_expected numeric;
 begin
   select opening_cash into v_open from shift where shift_id = p_shift_id and close_time is null;
-  if not found then raise exception 'Shift not found or already closed'; end if;
+  if not found then raise exception 'ไม่พบกะ หรือปิดไปแล้ว'; end if;
 
   select coalesce(sum(o.total_price), 0) into v_sales
     from orders o where o.shift_id = p_shift_id and o.status = 'paid';
@@ -421,8 +421,8 @@ begin
 
   return jsonb_build_object(
     'total_sales', v_sales, 'cash_sales', v_cash, 'expected_cash', v_expected,
-    'counted_cash', p_counted_cash, 'cash_diff', p_counted_cash - v_expected
-  );
+    'counted_cash',    p_counted_cash, 'cash_diff', p_counted_cash - v_expected
+    );
 end $$;
 
 do $$
@@ -438,33 +438,30 @@ create policy read_modifier   on modifier   for select using (true);
 create policy read_promotion  on promotion  for select using (status = 'active');
 create policy read_ingredient on ingredient for select using (true);
 
--- ---------------------------------------------------------
--- Seed data
--- ---------------------------------------------------------
 insert into branch (name, address, phone_number)
-values ('Aroma Brew Main Branch', 'Bangkok', '021234567');
+values ('Aroma Brew สาขาหลัก', 'กรุงเทพฯ', '021234567');
 
 insert into employee (branch_id, name, role, password_hash) values
- (1, 'Owner',       'owner',   extensions.crypt('owner1234',   extensions.gen_salt('bf'))),
- (1, 'Cashier 1',   'cashier', extensions.crypt('cashier1234', extensions.gen_salt('bf'))),
- (1, 'Stock Clerk', 'stock',   extensions.crypt('stock1234',   extensions.gen_salt('bf')));
+ (1, 'เจ้าของร้าน',   'owner',   extensions.crypt('owner1234',   extensions.gen_salt('bf'))),
+ (1, 'แคชเชียร์ 1',  'cashier', extensions.crypt('cashier1234', extensions.gen_salt('bf'))),
+ (1, 'พนักงานคลัง',  'stock',   extensions.crypt('stock1234',   extensions.gen_salt('bf')));
 
 insert into ingredient (branch_id, name, unit, reorder_point) values
- (1, 'Coffee Beans',         'g',     500),
- (1, 'Fresh Milk',           'ml',   2000),
- (1, 'Simple Syrup',         'ml',    500),
- (1, 'Green Tea Powder',     'g',     200),
- (1, 'Oat Milk',             'ml',   1000),
- (1, 'Croissant (Pre-made)', 'piece',  10);
+ (1, 'เมล็ดกาแฟ',  'g',    500),
+ (1, 'นมสด',       'ml',  2000),
+ (1, 'น้ำเชื่อม',   'ml',   500),
+ (1, 'ผงชาเขียว',  'g',    200),
+ (1, 'นมโอ๊ต',     'ml',  1000),
+ (1, 'ครัวซองต์ (สำเร็จรูป)', 'ชิ้น', 10);
 
 insert into stock_movement (branch_id, ingredient_id, movement_type, quantity_change, reference_type, reason, employee_id)
 values
- (1,1,'receive',  3000,'opening','Opening Balance',3),
- (1,2,'receive', 10000,'opening','Opening Balance',3),
- (1,3,'receive',  2000,'opening','Opening Balance',3),
- (1,4,'receive',   800,'opening','Opening Balance',3),
- (1,5,'receive',  4000,'opening','Opening Balance',3),
- (1,6,'receive',    40,'opening','Opening Balance',3);
+ (1,1,'receive', 3000,'opening','ยอดยกมา',3),
+ (1,2,'receive',10000,'opening','ยอดยกมา',3),
+ (1,3,'receive', 2000,'opening','ยอดยกมา',3),
+ (1,4,'receive',  800,'opening','ยอดยกมา',3),
+ (1,5,'receive', 4000,'opening','ยอดยกมา',3),
+ (1,6,'receive',   40,'opening','ยอดยกมา',3);
 
 insert into product (name, category, price) values
  ('Americano',    'coffee', 60),
@@ -479,10 +476,10 @@ insert into recipe (product_id, size, ingredient_id, qty_per_serve) values
  (4,'M',6,1),  (4,'L',6,1);
 
 insert into modifier (name, type, extra_price) values
- ('Sweet 50%',  'sweet', 0),
- ('Sweet 100%', 'sweet', 0),
- ('Oat Milk',   'milk',  15),
- ('Extra Shot', 'extra', 20);
+ ('หวานน้อย',   'sweet', 0),
+ ('หวานปกติ',   'sweet', 0),
+ ('นมโอ๊ต',     'milk',  15),
+ ('เพิ่มช็อต',   'extra', 20);
 
 insert into modifier_ingredient (modifier_id, ingredient_id, extra_qty) values
  (2,3,15),
@@ -490,9 +487,8 @@ insert into modifier_ingredient (modifier_id, ingredient_id, extra_qty) values
  (4,1,9);
 
 insert into customer (phone_number, name) values
- ('0812345678', 'Somchai Jaidee'),
- ('0898765432', 'Malee Suayngam');
+ ('0812345678', 'สมชาย ใจดี'),
+ ('0898765432', 'มาลี สวยงาม');
 
 insert into promotion (name, discount_type, value, start_date, end_date) values
- ('Discount 10%', 'percent', 10, current_date - 1, current_date + 365);
- 
+ ('ลด 10%', 'percent', 10, current_date - 1, current_date + 365);

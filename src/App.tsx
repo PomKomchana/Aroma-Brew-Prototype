@@ -13,11 +13,19 @@ import Employees from './pages/Employees'
 import Promotions from './pages/Promotions'
 import Reports from './pages/Reports'
 import Member from './pages/Member'
+import { useAutoSync } from './lib/offlineQueue'
+
+/** ซิงค์บิล offline อัตโนมัติ ทำงานทุกหน้า */
+function SyncRunner() {
+  useAutoSync()
+  return null
+}
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <SyncRunner />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/shift" element={<RequireRole roles={['cashier']}><OpenShift /></RequireRole>} />
@@ -30,9 +38,8 @@ export default function App() {
           <Route path="/employees" element={<RequireRole roles={['owner']}><Employees /></RequireRole>} />
           <Route path="/promotions" element={<RequireRole roles={['owner']}><Promotions /></RequireRole>} />
           <Route path="/reports" element={<RequireRole roles={['owner']}><Reports /></RequireRole>} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<Login />} />
           <Route path="/member" element={<Member />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

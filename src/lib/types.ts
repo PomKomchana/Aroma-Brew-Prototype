@@ -14,8 +14,8 @@ export interface Product {
   price: number
   image: string | null
   is_active: boolean
-  description?: string | null
-  allergens?: string | null
+  description: string | null
+  allergens: string[]
 }
 
 export interface Modifier {
@@ -151,6 +151,8 @@ export interface AdminProduct {
   price: number
   image: string | null
   is_active: boolean
+  description: string | null
+  allergens: string[]
   recipes: RecipeRow[]
 }
 

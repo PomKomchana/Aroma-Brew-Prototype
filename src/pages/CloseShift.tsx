@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext'
 import { PAYMENT_LABEL, money, type PaymentMethod } from '../lib/pos'
 import type { CloseResult, ShiftSummary } from '../lib/types'
 import { Shell } from '../components/Shell'
+import { useOnline, useQueue } from '../lib/offlineQueue'
 
 /** [S09 ปิดกะ (นับเงินสด)] -> แสดงผลต่าง -> [กลับ S01] */
 export default function CloseShift() {
@@ -15,6 +16,9 @@ export default function CloseShift() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<CloseResult | null>(null)
+  const online = useOnline()
+  const queue = useQueue()
+  const blocked = !online || queue.length > 0 // ต้องซิงค์บิล offline ให้ครบก่อน ยอดปิดกะจึงจะถูก
 
   useEffect(() => {
     if (!shiftId) return
@@ -22,7 +26,7 @@ export default function CloseShift() {
       if (error) setError(error.message)
       else setSummary(data as ShiftSummary)
     })
-  }, [shiftId])
+  }, [shiftId, queue.length]) // โหลดสรุปใหม่เมื่อซิงค์บิลเสร็จ
 
   const cashSales = Number(summary?.by_method.cash ?? 0)
   const expected = Number(summary?.opening_cash ?? 0) + cashSales
@@ -89,6 +93,12 @@ export default function CloseShift() {
         <h2>Close Shift</h2>
         <p className="sub">Check sales and count cash in the drawer</p>
 
+        {blocked && (
+          <p className="notice warn" role="alert">
+            {!online ? 'You are offline. Reconnect to close the shift.' : `${queue.length} offline bill(s) are waiting to sync. The shift can be closed once they are synced.`}
+          </p>
+        )}
+
         {error && <p className="error" role="alert">{error}</p>}
         {!summary && !error && <p className="muted">Loading shift summary...</p>}
 
@@ -123,7 +133,7 @@ export default function CloseShift() {
                   {diff === 0 ? 'Matches expected amount' : `Difference ${diff > 0 ? '+' : ''}${money(diff)}`}
                 </p>
               )}
-              <button className="btn btn-block" disabled={busy || counted === '' || !(countedNum >= 0)} onClick={confirm}>
+              <button className="btn btn-block" disabled={busy || blocked || counted === '' || !(countedNum >= 0)} onClick={confirm}>
                 {busy ? 'Closing the shift...' : 'Confirmed shift closed'}
               </button>
             </div>
