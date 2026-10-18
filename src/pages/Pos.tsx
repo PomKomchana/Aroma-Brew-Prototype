@@ -19,6 +19,7 @@ import {
 import { Shell } from '../components/Shell'
 import ProductModal from '../components/ProductModal'
 import Receipt from '../components/Receipt'
+import { HoverCard, type HoverState } from '../components/ProductInfo'
 
 /** [S03 POS หลัก] + [S05 ค้นหาสมาชิก] + [S06 ชำระเงิน] */
 export default function Pos() {
@@ -28,6 +29,8 @@ export default function Pos() {
   const [modifiers, setModifiers] = useState<Modifier[]>([])
   const [promos, setPromos] = useState<Promotion[]>([])
   const [sizes, setSizes] = useState<Record<number, string[]>>({})
+  const [ingredientsOf, setIngredientsOf] = useState<Record<number, string[]>>({})
+  const [hover, setHover] = useState<HoverState | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
 
@@ -49,10 +52,11 @@ export default function Pos() {
     Promise.all([
       supabase.from('product').select('*').eq('is_active', true).order('product_id'),
       supabase.from('modifier').select('*').order('modifier_id'),
-      supabase.from('recipe').select('product_id,size'),
+      supabase.from('recipe').select('product_id,size, ingredient_id'),
       supabase.from('promotion').select('*'),
-    ]).then(([p, m, r, pr]) => {
-      const err = p.error ?? m.error ?? r.error ?? pr.error
+      supabase.from('ingredient').select('ingredient_id,name'),
+    ]).then(([p, m, r, pr, ing]) => {
+      const err = p.error ?? m.error ?? r.error ?? pr.error ?? ing.error
       if (err) {
         setLoadError('Failed to load data: ' + err.message)
       } else {
@@ -61,10 +65,16 @@ export default function Pos() {
         setModifiers((m.data ?? []) as Modifier[])
         setPromos((pr.data ?? []) as Promotion[])
         const map: Record<number, string[]> = {}
-        for (const row of (r.data ?? []) as { product_id: number; size: string }[]) {
+        const names = new Map(((ing.data ?? []) as { ingredient_id: number; name: string }[]).map((i) => [i.ingredient_id, i.name]))
+        const ingMap: Record<number, string[]> = {}
+        for (const row of (r.data ?? []) as { product_id: number; size: string; ingredient_id: number }[]) {
           const list = (map[row.product_id] ??= [])
           if (!list.includes(row.size)) list.push(row.size)
+          const n = names.get(row.ingredient_id)
+          const il = (ingMap[row.product_id] ??= [])
+          if (n && !il.includes(n)) il.push(n)
         }
+        setIngredientsOf(ingMap)
         for (const k of Object.keys(map)) map[Number(k)].sort()
         setSizes(map)
         setCat(prods[0]?.category ?? '')
@@ -97,6 +107,14 @@ export default function Pos() {
         : [...prev, { key, product, size, modifiers: mods, unitPrice, qty: 1 }],
     )
     setModalProduct(null)
+  }
+
+  function showHover(e: React.PointerEvent<HTMLButtonElement>, product: Product) {
+    if (e.pointerType !== 'mouse' || modalProduct) return
+    const item = e.currentTarget.getBoundingClientRect()
+    const grid = e.currentTarget.parentElement!.getBoundingClientRect()
+    const side = item.left + item.width / 2 > grid.left + grid.width / 2 ? 'left' : 'right'
+    setHover({ product, x: e.clientX, y: e.clientY, side })
   }
 
   function changeQty(key: string, delta: number) {
@@ -192,7 +210,13 @@ export default function Pos() {
           )}
           <div className="grid">
             {shown.map((p) => (
-              <button key={p.product_id} className="menu-item" onClick={() => setModalProduct(p)}>
+              <button key={p.product_id} className="menu-item"
+                  onClick={() => { setHover(null); setModalProduct(p) }}
+                  onPointerEnter={(e) => showHover(e, p)}
+                  onPointerMove={(e) => showHover(e, p)}
+                  onPointerLeave={() => setHover(null)}
+                  onBlur={() => setHover(null)}
+              >
                 <div className="menu-img">{p.image ? <img src={p.image} alt="" /> : '☕'}</div>
                 <span className="menu-name">{p.name}</span>
                 <span className="menu-price">{money(Number(p.price))}</span>
@@ -323,12 +347,15 @@ export default function Pos() {
         {modalProduct && (
           <ProductModal
             product={modalProduct}
+            ingredients={ingredientsOf[modalProduct.product_id] ?? []}
             sizes={sizes[modalProduct.product_id] ?? ['M']}
             modifiers={modifiers}
             onClose={() => setModalProduct(null)}
             onAdd={(size, mods) => addLine(modalProduct, size, mods)}
           />
         )}
+
+        {hover && !modalProduct && <HoverCard hover={hover} ingredients={ingredientsOf[hover.product.product_id] ?? []} />}
       </div>
     </Shell>
   )

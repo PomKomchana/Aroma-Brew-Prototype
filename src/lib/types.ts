@@ -14,6 +14,8 @@ export interface Product {
   price: number
   image: string | null
   is_active: boolean
+  description?: string | null
+  allergens?: string | null
 }
 
 export interface Modifier {

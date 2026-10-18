@@ -16,6 +16,22 @@ export const MODIFIER_GROUP_LABEL: Record<string, string> = {
 /** กลุ่มที่เลือกได้อย่างเดียว */
 export const SINGLE_GROUPS = ['sweet', 'milk']
 
+const DRINK_GROUPS = ['sweet', 'milk', 'extra']
+export const GROUPS_BY_CATEGORY: Record<string, string[]> = {
+  coffe: DRINK_GROUPS,
+  tea: DRINK_GROUPS,
+  bakery: ['bakery'],
+}
+MODIFIER_GROUP_LABEL.bakery = 'Serving'
+
+export const isDrink = (category: string) => category !== 'bakery'
+export const groupsFor = (category: string) => GROUPS_BY_CATEGORY[category] ?? DRINK_GROUPS
+
+export const ALLERGEN_LABEL: Record<string, string> = {
+  gluten: 'Gluten (wheat)', milk: 'Milk', egg: 'Egg', soy: 'Soy',
+  nuts: 'Tree nuts', peanut: 'Peanuts', sesame: 'Sesame',
+}
+
 export const PAYMENT_LABEL = { cash: 'Cash', card: 'Card', promptpay: 'PromptPay' } as const
 export type PaymentMethod = keyof typeof PAYMENT_LABEL
 

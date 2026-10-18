@@ -1,21 +1,26 @@
 import { useState } from 'react'
-import { MODIFIER_GROUP_LABEL, SINGLE_GROUPS, SIZE_LABEL, money } from '../lib/pos'
+import { MODIFIER_GROUP_LABEL, SINGLE_GROUPS, SIZE_LABEL, groupsFor, isDrink, money } from '../lib/pos'
+import { ProductInfo } from './ProductInfo'
 import type { Modifier, Product } from '../lib/types'
 
 interface Props {
   product: Product
   sizes: string[]
   modifiers: Modifier[]
+  ingredients: string[]
   onClose: () => void
   onAdd: (size: string, selected: Modifier[]) => void
 }
 
 /** [S04 เลือกขนาดและ Modifier (ราคารวมอัปเดตสด)] */
-export default function ProductModal({ product, sizes, modifiers, onClose, onAdd }: Props) {
-  const [size, setSize] = useState(sizes[0])
+export default function ProductModal({ product, sizes, modifiers, ingredients, onClose, onAdd }: Props) {
+  const drink = isDrink(product.category)
+  const sizeOptions = drink ? sizes : []
+  const [size, setSize] = useState(drink ? sizes[0] : sizes.includes('M') ? 'M' : sizes[0])
   const [selected, setSelected] = useState<Modifier[]>([])
 
-  const groups = [...new Set(modifiers.map((m) => m.type))]
+  const allowed = groupsFor(product.category)
+  const groups = [...new Set(modifiers.map((m) => m.type))].filter((g) => allowed.includes(g))
   const unit = Number(product.price) + selected.reduce((s, m) => s + Number(m.extra_price), 0)
 
   function toggle(m: Modifier) {
@@ -39,11 +44,11 @@ export default function ProductModal({ product, sizes, modifiers, onClose, onAdd
           </div>
         </div>
 
-        {sizes.length > 1 && (
+        {sizeOptions.length > 1 && (
           <div className="group">
             <p className="sec-label">Size</p>
             <div className="opts">
-              {sizes.map((s) => (
+              {sizeOptions.map((s) => (
                 <button key={s} className={size === s ? 'opt size on' : 'opt size'} onClick={() => setSize(s)}>
                   {SIZE_LABEL[s] ?? s}
                 </button>
@@ -52,6 +57,7 @@ export default function ProductModal({ product, sizes, modifiers, onClose, onAdd
           </div>
         )}
 
+      <ProductInfo product={product} ingredients={ingredients} />
         {groups.map((g) => (
           <div className="group" key={g}>
             <p className="sec-label">{MODIFIER_GROUP_LABEL[g] ?? g}</p>

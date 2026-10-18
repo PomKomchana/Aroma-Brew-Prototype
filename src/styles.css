@@ -263,3 +263,18 @@ button { cursor: pointer; }
 .hist b { display: block; font-weight: 500; color: var(--cream); }
 .hist small { display: block; font-size: 12px; color: var(--smoke); }
 .hist.cancelled-h b { text-decoration: line-through; color: var(--smoke); }
+
+.pinfo { margin-bottom: 16px; }
+.pinfo-desc { margin: 0 0 12px; font-size: 14px; color: var(--roast); line-height: 1.45; }
+.pinfo-text { margin: 0 0 12px; font-size: 13px; color: var(--roast); line-height: 1.45; }
+.allergens { display: flex; flex-wrap: wrap; gap: 6px; }
+.allergen { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; background: #fdecea; color: var(--danger); border: 1px solid #f5c6c1; }
+
+.hover-card { position: fixed; z-index: 100; width: 280px; pointer-events: none; overflow: hidden; background: #fff; color: var(--roast); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 16px 36px rgba(26, 18, 8, 0.28); }
+.hover-img { display: block; width: 100%; height: 130px; object-fit: cover; }
+.hover-body { padding: 14px 16px 4px; }
+.hover-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.hover-name { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+.hover-cat { margin: 0; font-size: 12px; color: var(--smoke); }
+.hover-price { font-weight: 600; color: var(--amber); }
+.hover-body .pinfo { margin-bottom: 10px; }

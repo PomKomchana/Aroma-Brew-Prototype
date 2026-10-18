@@ -152,3 +152,5 @@ table tbody tr:hover { background: rgba(212, 145, 58, 0.08); }
     transition-duration: 0.01ms !important;
   }
 }
+
+.hover-card { animation: pop-in var(--dur-fast) var(--ease-out) both; }
