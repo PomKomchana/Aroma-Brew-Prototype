@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { Shell } from '../components/Shell'
+import StockAlertBanner from '../components/StockAlertBanner'
 import { errMsg, rpc, todayStr } from '../lib/api'
 import { PAYMENT_LABEL, money, type PaymentMethod } from '../lib/pos'
 import type { DashboardData } from '../lib/types'
@@ -37,6 +38,7 @@ export default function Dashboard() {
             {RANGES.map((r) => <button key={r.days} className={days === r.days ? 'tab on' : 'tab'} onClick={() => setDays(r.days)}>{r.label}</button>)}
           </div>
         </div>
+        <StockAlertBanner />
         {error && <p className="error" role="alert">{error}</p>}
         {!d && !error && <p className="muted">Loading…</p>}
         {d && (

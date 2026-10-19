@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext'
 import { ROLE_LABEL, type Role } from '../lib/types'
 import { useOnline, useQueue, useSyncing } from '../lib/offlineQueue'
 import SyncPanel from './SyncPanel'
+import { useStockAlerts } from '../lib/stockAlerts'
 
 const NAV: Record<Role, { to: string; icon: string; label: string }[]> = {
   cashier: [
@@ -15,11 +16,17 @@ const NAV: Record<Role, { to: string; icon: string; label: string }[]> = {
     { to: '/dashboard', icon: '📊', label: 'Dashboard' },
     { to: '/products', icon: '🍰', label: 'Products & Recipes' },
     { to: '/stock', icon: '📦', label: 'Inventory' },
+    { to: '/purchasing', icon: '📝', label: 'Purchase Orders' },
+    { to: '/suppliers', icon: '🚚', label: 'Suppliers' },
     { to: '/promotions', icon: '🏷️', label: 'Promotions' },
     { to: '/employees', icon: '👥', label: 'Employees' },
     { to: '/reports', icon: '📑', label: 'Reports & Audit' },
   ],
-  stock: [{ to: '/stock', icon: '📦', label: 'Inventory' }],
+  stock: [
+    { to: '/stock', icon: '📦', label: 'Inventory' },
+    { to: '/purchasing', icon: '📝', label: 'Purchase Orders' },
+    { to: '/suppliers', icon: '🚚', label: 'Suppliers' },
+  ],
 }
 
 /** สถานะออนไลน์/ออฟไลน์ที่มุมจอ + จำนวนบิลที่รอซิงค์ [NFR-04] */
@@ -48,6 +55,7 @@ function Connection() {
 export function Shell({ children }: { children: ReactNode }) {
   const { employee, shiftId, logout } = useAuth()
   const nav = useNavigate()
+  const alerts = useStockAlerts(employee?.employee_id ?? null, !!employee && employee.role !== 'cashier')
   if (!employee) return null
   return (
     <div className="app">
@@ -67,6 +75,9 @@ export function Shell({ children }: { children: ReactNode }) {
             <NavLink key={n.to} to={n.to} className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
               <span>{n.icon}</span>
               <span className="t">{n.label}</span>
+              {n.to === '/stock' && alerts && alerts.count > 0 && (
+                <span className="nav-badge" title={`${alerts.count} ingredient(s) low, out of stock or expiring`} aria-label={`${alerts.count} stock alerts`}>{alerts.count}</span>
+              )}
             </NavLink>
           ))}
         </nav>

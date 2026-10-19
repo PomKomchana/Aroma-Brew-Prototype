@@ -22,3 +22,12 @@ export const fmtDateTime = (s: string): string =>
   new Date(s).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 export const fmtQty = (n: number): string => Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 })
+
+export const poNo = (id: number): string => `PO-${String(id).padStart(4, '0')}`
+
+/** 'YYYY-MM-DD' -> '19 Oct 2026' (no timezone shift) */
+export const fmtDate = (s: string | null): string => {
+  if (!s) return '–'
+  const [y, m, d] = s.slice(0, 10).split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}

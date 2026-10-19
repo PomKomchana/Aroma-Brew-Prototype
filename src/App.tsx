@@ -13,6 +13,8 @@ import Employees from './pages/Employees'
 import Promotions from './pages/Promotions'
 import Reports from './pages/Reports'
 import Member from './pages/Member'
+import Suppliers from './pages/Suppliers'
+import PurchaseOrders from './pages/PurchaseOrders'
 import { useAutoSync } from './lib/offlineQueue'
 
 /** ซิงค์บิล offline อัตโนมัติ ทำงานทุกหน้า */
@@ -33,6 +35,8 @@ export default function App() {
           <Route path="/close-shift" element={<RequireRole roles={['cashier']}><CloseShift /></RequireRole>} />
           <Route path="/orders" element={<RequireRole roles={['cashier']}><Orders /></RequireRole>} />
           <Route path="/stock" element={<RequireRole roles={['stock', 'owner']}><Stock /></RequireRole>} />
+          <Route path="/suppliers" element={<RequireRole roles={['stock', 'owner']}><Suppliers /></RequireRole>} />
+          <Route path="/purchasing" element={<RequireRole roles={['stock', 'owner']}><PurchaseOrders /></RequireRole>} />
           <Route path="/dashboard" element={<RequireRole roles={['owner']}><Dashboard /></RequireRole>} />
           <Route path="/products" element={<RequireRole roles={['owner']}><Products /></RequireRole>} />
           <Route path="/employees" element={<RequireRole roles={['owner']}><Employees /></RequireRole>} />

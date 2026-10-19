@@ -162,3 +162,87 @@ export interface EmployeeRow {
   role: Role
   status: 'active' | 'inactive'
 }
+
+// Stock alerts
+export interface StockAlerts {
+  count: number
+  low: { ingredient_id: number; name: string; unit: string; stock_qty: number; reorder_point: number; level: 'low' | 'out' }[]
+  near_expiry: { ingredient_id: number; name: string; unit: string; stock_qty: number; nearest_expiry: string }[]
+}
+
+// Suppliers & purchase orders
+export interface SupplierIngredient {
+  supplier_ingredient_id: number
+  ingredient_id: number
+  ingredient: string
+  unit: string
+  unit_price: number
+  lead_time_days: number | null
+}
+
+export interface Supplier {
+  supplier_id: number
+  name: string
+  contact_name: string | null
+  phone_number: string | null
+  address: string | null
+  is_active: boolean
+  ingredients: SupplierIngredient[]
+}
+
+export type PoStatus = 'draft' | 'sent' | 'partial' | 'received' | 'cancelled'
+
+export interface PoLine {
+  po_detail_id: number
+  ingredient_id: number
+  ingredient: string
+  unit: string
+  qty_ordered: number
+  qty_received: number
+  unit_price: number
+}
+
+export interface PoReceipt {
+  lot_id: number
+  ingredient: string
+  unit: string
+  qty_received: number
+  unit_cost: number | null
+  expiry_date: string | null
+  received_at: string
+}
+
+export interface PurchaseOrder {
+  po_id: number
+  status: PoStatus
+  order_date: string
+  expected_date: string | null
+  note: string | null
+  sent_at: string | null
+  closed_at: string | null
+  total_cost: number
+  supplier_id: number
+  supplier: string
+  created_by: string
+  lines: PoLine[]
+  receipts: PoReceipt[]
+}
+
+// Sales report
+export type ReportGroup = 'hour' | 'day' | 'month'
+export interface SalesReport {
+  from: string
+  to: string
+  group: ReportGroup
+  sales: number
+  orders: number
+  discount: number
+  avg_bill: number
+  cost: number
+  profit: number
+  cancelled: number
+  cancelled_amount: number
+  buckets: { key: string; sales: number; orders: number }[]
+  top_products: { name: string; qty: number; revenue: number }[]
+  by_method: Partial<Record<'cash' | 'card' | 'promptpay', number>>
+}

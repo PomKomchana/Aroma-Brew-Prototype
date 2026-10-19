@@ -23,6 +23,8 @@ import ProductModal from '../components/ProductModal'
 import Receipt from '../components/Receipt'
 import { HoverCard, type HoverState } from '../components/ProductInfo'
 
+const METHODS = Object.keys(PAYMENT_LABEL) as PaymentMethod[]
+
 /** [S03 POS หลัก] + [S05 ค้นหาสมาชิก] + [S06 ชำระเงิน] */
 export default function Pos() {
   const { employee, shiftId } = useAuth()
@@ -79,7 +81,7 @@ export default function Pos() {
   const received = Number(cashInput)
   const change = method === 'cash' && cashInput !== '' ? Math.max(0, received - total) : 0
   const cashShort = method === 'cash' && (cashInput === '' || received < total)
-  const canPay = cart.length > 0 && method !== null && !cashShort && !busy
+  const canPay = cart.length > 0 && !busy && method !== null && !cashShort
 
   if (!shiftId) return <Navigate to="/shift" replace />
 
@@ -309,7 +311,7 @@ export default function Pos() {
           <div className="cart-sec">
             <p className="sec-label">Payment Method</p>
             <div className="pay-grid">
-              {(Object.keys(PAYMENT_LABEL) as PaymentMethod[]).map((m) => (
+              {METHODS.map((m) => (
                 <button key={m} className={method === m ? 'pay on' : 'pay'} disabled={!online && !OFFLINE_METHODS.includes(m)} title={!online && !OFFLINE_METHODS.includes(m) ? 'Cash only while offline' : undefined} onClick={() => setMethod(m)}>
                   {PAYMENT_LABEL[m]}
                 </button>
