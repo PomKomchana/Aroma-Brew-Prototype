@@ -16,8 +16,15 @@ import Member from './pages/Member'
 import Suppliers from './pages/Suppliers'
 import PurchaseOrders from './pages/PurchaseOrders'
 import { useAutoSync } from './lib/offlineQueue'
+import CustomerLayout from './customer/CustomerLayout'
+import Home from './customer/Home'
+import MenuPage from './customer/MenuPage'
+import ProductPage from './customer/ProductPage'
+import Rewards from './customer/Rewards'
+import Allergens from './customer/Allergens'
+import Stores from './customer/Stores'
 
-/** ซิงค์บิล offline อัตโนมัติ ทำงานทุกหน้า */
+/** Automatically sync offline bills on every page */
 function SyncRunner() {
   useAutoSync()
   return null
@@ -43,6 +50,15 @@ export default function App() {
           <Route path="/promotions" element={<RequireRole roles={['owner']}><Promotions /></RequireRole>} />
           <Route path="/reports" element={<RequireRole roles={['owner']}><Reports /></RequireRole>} />
           <Route path="/member" element={<Member />} />
+          {/* เว็บฝั่งลูกค้า (สไตล์/ฟังก์ชันอ้างอิง Pret) */}
+          <Route element={<CustomerLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/menu" element={<MenuPage />} />
+            <Route path="/menu/:id" element={<ProductPage />} />
+            <Route path="/rewards" element={<Rewards />} />
+            <Route path="/allergens" element={<Allergens />} />
+            <Route path="/stores" element={<Stores />} />
+          </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
