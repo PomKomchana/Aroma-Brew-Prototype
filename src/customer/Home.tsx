@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { POINT_RATE } from '../lib/pos'
 import { activePromos, bigImg, catLabel, promoText, promoUntil, useMenu } from './useMenu'
@@ -13,13 +14,35 @@ export default function Home() {
   const promo = data ? activePromos(data.promos)[0] : undefined
   const cats = Array.from(new Set(products.map((p) => p.category)))
   const catImg = (c: string) => bigImg(products.find((p) => p.category === c && p.image)?.image)
+  const pullRef = useRef<HTMLElement>(null)
+
+  // The white panel rises over the hero as you scroll, and its content settles in after it
+  useEffect(() => {
+    const el = pullRef.current
+    if (!el) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.style.setProperty('--p', '1')
+      el.classList.add('in')
+      return
+    }
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const p = Math.min(1, Math.max(0, window.scrollY / 320))
+      el.style.setProperty('--p', String(p))
+      el.classList.toggle('in', p > 0.12 || el.getBoundingClientRect().top < window.innerHeight * 0.55)
+    }
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { window.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf) }
+  }, [])
 
   return (
     <>
-      <section className="cs-hero">
+      <section className="cs-hero big">
         <div className="cs-wrap cs-hero-in">
-          <p className="cs-kicker">Member rewards</p>
-          <h1>Sip. Earn.<br />Come back for more.</h1>
+          <h1>Sip. <span className="cs-gold">Earn.</span><br />Come back for more.</h1>
           <p className="cs-lead">Every {`฿${POINT_RATE}`} you spend earns 1 point. Share your phone number at the counter and check your points here anytime.</p>
           <div className="cs-actions">
             <Link className="cs-btn" to="/menu">Order ahead</Link>
@@ -28,10 +51,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="cs-sec cs-sec-sand">
-        <div className="cs-wrap">
-          <p className="cs-kicker">Order ahead</p>
-          <h2 className="cs-h2">Skip the queue</h2>
+      <section className="cs-pull" ref={pullRef}>
+        <div className="cs-pull-card">
+          <h2 className="cs-pull-h">Skip the queue</h2>
           <div className="cs-steps">
             {[['1', 'Choose your order', 'Pick drinks and bakes from the menu and add them to your basket.'],
               ['2', 'Pick a time', 'Choose a pickup time today and sign in with your phone number.'],

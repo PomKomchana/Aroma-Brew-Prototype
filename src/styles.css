@@ -33,7 +33,10 @@ button { cursor: pointer; }
 .login-inner { position: relative; width: 100%; max-width: 384px; }
 .login-head { text-align: center; margin-bottom: 36px; }
 .login-kicker { color: var(--amber); font-size: 12px; letter-spacing: 0.35em; margin: 0 0 12px; }
-.login-title { font-family: var(--font-display); font-size: 2.8rem; font-weight: 300; line-height: 1; margin: 0; color: var(--cream); }
+.login-title { font-family: var(--font-display); font-size: 2.8rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1; margin: 0; color: var(--cream); }
+.login-logo { color: var(--cream); text-decoration: none; }
+.login-logo span { color: var(--gold); }
+.login-logo:hover { opacity: 0.85; }
 .login-card { background: rgba(45, 31, 14, 0.92); border: 1px solid var(--bark); border-radius: 16px; padding: 28px; }
 .login-card h2 { font-size: 16px; font-weight: 600; margin: 0 0 24px; }
 .dark-field { display: block; margin-bottom: 16px; }
@@ -320,3 +323,53 @@ button { cursor: pointer; }
 .period-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
 .period-bar .toolbar .input { width: 160px; }
 @media (max-width: 900px) { .po-line { grid-template-columns: 1fr 1fr; } .steps { flex-wrap: wrap; } }
+
+/* ===== Staff area restyle: matches the customer website ===== */
+.sidebar { width: 240px; background: var(--roast); }
+.side-head { padding: 24px 20px 20px; }
+.side-brand { font-family: var(--font-display); font-weight: 600; font-size: 26px; letter-spacing: -0.01em; color: var(--cream); }
+.side-brand span { color: var(--gold); }
+.side-name { margin-top: 8px; color: var(--gold); font-size: 14px; font-weight: 500; }
+.side-role { color: var(--mist); font-size: 13px; }
+.nav-item { min-height: 46px; padding: 0 16px; border-radius: 999px; color: var(--cream); font-size: 15px; font-weight: 500; transition: background-color 0.2s ease, color 0.2s ease; }
+.nav-item:hover { background: rgba(245, 237, 224, 0.1); color: var(--gold); }
+.nav-item.active { background: var(--amber); color: var(--espresso); font-weight: 600; }
+.side-foot button { color: var(--mist); }
+
+.page { padding: 40px 48px 64px; }
+.page h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.8rem, 2.6vw, 2.4rem); line-height: 1.1; letter-spacing: -0.01em; }
+.page .sub { font-size: 15px; margin: 6px 0 28px; }
+.page-head { margin-bottom: 24px; }
+
+.btn, .mini-btn, .confirm, .pay, .opt, .tab, .btn-amber, .qty button, .member-x { border-radius: 999px; }
+.btn { background: var(--amber); color: var(--espresso); letter-spacing: 0.02em; transition: background-color 0.2s ease; }
+.btn:hover:not(:disabled) { background: var(--gold); }
+.btn-dark { background: var(--roast); color: var(--cream); }
+.btn-dark:hover:not(:disabled) { background: var(--bark); }
+.confirm, .btn-amber { background: var(--amber); color: var(--espresso); letter-spacing: 0.04em; }
+.confirm:hover:not(:disabled), .btn-amber:hover:not(:disabled) { background: var(--gold); }
+.mini-btn { padding: 0 18px; }
+.pay.on, .opt.on, .qty button.plus { color: var(--espresso); }
+.tab { padding: 0 22px; }
+.tab.on { background: var(--roast); color: var(--cream); }
+.link-btn { color: #9a5b0c; font-weight: 500; }
+.link-btn.danger { color: var(--danger); }
+
+.card, .table-wrap, .kpi, .modal, .login-card { border-radius: 16px; }
+.kpi b { font-weight: 800; letter-spacing: -0.01em; }
+.kpi.accent b { color: #9a5b0c; }
+.tbl th { letter-spacing: 0.02em; background: var(--paper); }
+.modal-title { font-weight: 800; }
+.menu-item { border: 1px solid var(--line); border-radius: 16px; transition: border-color 0.2s ease; }
+.menu-item:hover { border-color: var(--amber); }
+.menu-name { font-weight: 500; }
+.menu-price { color: #9a5b0c; font-weight: 600; font-size: 13px; }
+.cart { border-left: 1px solid var(--line); }
+.cart-head { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; }
+.sum-row.total { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; }
+.done h2 { font-weight: 800; }
+.login-kicker { letter-spacing: 0.12em; color: var(--gold); }
+.login-card h2 { font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; }
+.dark-field span, .field span { letter-spacing: 0.04em; }
+.demo button { border-radius: 12px; }
+@media (max-width: 900px) { .sidebar { width: 72px; } .page { padding: 24px 20px 48px; } .nav-item { padding: 0 14px; } }

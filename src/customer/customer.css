@@ -1034,3 +1034,483 @@ a.cs-card:hover {
     position: static;
   }
 }
+
+/* ===== Restyle: Bean & Brew header, Pret hero wordmark + overlapping panel ===== */
+/* Header: logo left, links + basket + pill button grouped on the right */
+.cs-bar {
+  max-width: 1320px;
+  padding: 0 40px;
+  gap: 32px;
+}
+.cs-logo {
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+  color: var(--cream);
+}
+.cs-logo span {
+  color: var(--gold);
+}
+.cs-nav {
+  flex: 0 1 auto;
+  margin-left: auto;
+  gap: 8px;
+}
+.cs-nav a:not(.cs-cta) {
+  color: var(--cream);
+  font-weight: 500;
+}
+.cs-nav a.active {
+  box-shadow: none;
+  color: var(--gold);
+}
+.cs-basket {
+  margin-left: 0;
+  color: var(--cream);
+  font-weight: 500;
+}
+.cs-basket:hover {
+  color: var(--gold);
+}
+.cs-cta {
+  border-radius: 999px;
+  min-height: 42px;
+  padding: 0 24px;
+  letter-spacing: 0.02em;
+}
+.cs-head.home {
+  position: fixed;
+  left: 0;
+  right: 0;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+.cs-head.home.over {
+  background: transparent;
+  border-bottom-color: transparent;
+}
+.cs-head.home:not(.over) {
+  background: rgba(26, 18, 8, 0.9);
+  backdrop-filter: blur(14px);
+}
+.cs-head.min .cs-logo {
+  margin: 0 auto;
+}
+
+/* Hero: large heavy serif wordmark, no eyebrow */
+.cs-hero.big {
+  min-height: 720px;
+  padding: 68px 0 150px;
+}
+.cs-hero.big::before {
+  background: linear-gradient(90deg, rgba(26, 18, 8, 0.9) 15%, rgba(26, 18, 8, 0.3));
+}
+.cs-hero.big::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 180px;
+  background: linear-gradient(rgba(26, 18, 8, 0.75), transparent);
+}
+.cs-hero.big .cs-hero-in {
+  z-index: 1;
+}
+.cs-hero.big h1 {
+  font-weight: 800;
+  font-size: clamp(3rem, 7.4vw, 6.25rem);
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  font-variation-settings: 'opsz' 144;
+  text-wrap: balance;
+  margin: 0 0 28px;
+}
+.cs-hero.big .cs-lead {
+  color: var(--cream);
+  max-width: 480px;
+}
+
+/* Panel that overlaps the bottom of the hero */
+.cs-pull {
+  position: relative;
+  z-index: 2;
+  margin-top: -96px;
+  padding: 0 24px 24px;
+}
+.cs-pull-card {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 56px 48px 64px;
+  background: #fff;
+}
+.cs-pull-h {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-align: center;
+  margin: 0 0 40px;
+}
+.cs-pull-card .cs-step {
+  background: transparent;
+  border: none;
+  padding: 0 16px;
+  text-align: center;
+}
+.cs-pull-card .cs-step p {
+  max-width: 300px;
+  margin: 0 auto;
+}
+@media (max-width: 960px) {
+  .cs-pull-card .cs-steps {
+    gap: 32px;
+  }
+}
+@media (max-width: 820px) {
+  .cs-bar {
+    padding: 0 20px;
+  }
+  .cs-basket {
+    margin-left: auto;
+  }
+  .cs-hero.big {
+    min-height: 600px;
+    padding-bottom: 130px;
+  }
+  .cs-pull {
+    margin-top: -72px;
+    padding: 0 16px 16px;
+  }
+  .cs-pull-card {
+    padding: 40px 20px 48px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-head.home {
+    transition: none;
+  }
+}
+
+/* Colour fixes: '.cs a { color: inherit }' was overriding these */
+.cs .cs-logo {
+  color: var(--cream);
+}
+.cs .cs-logo span {
+  color: var(--gold);
+}
+.cs .cs-basket {
+  color: var(--cream);
+}
+.cs .cs-basket:hover {
+  color: var(--gold);
+}
+.cs-hero.big h1 .cs-gold {
+  color: var(--gold);
+}
+
+/* ===== Header: Order now, basket icon, account hover menu ===== */
+.cs-order-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 6px;
+  margin-left: 0;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cs .cs-order-link {
+  color: var(--cream);
+}
+.cs .cs-order-link:hover {
+  color: var(--gold);
+}
+.cs-bag {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-left: -16px;
+  text-decoration: none;
+}
+.cs .cs-bag {
+  color: var(--cream);
+}
+.cs .cs-bag:hover {
+  color: var(--gold);
+}
+.cs-bag b {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--amber);
+  color: var(--espresso);
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cs-acct {
+  position: relative;
+}
+.cs-acct-pop {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  padding-top: 12px;
+  min-width: 240px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.25s var(--ease-out), visibility 0s linear 0.25s;
+}
+.cs-acct:hover .cs-acct-pop,
+.cs-acct:focus-within .cs-acct-pop {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+.cs-acct-card {
+  padding: 18px 20px;
+  background: #fff;
+  color: var(--roast);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(26, 18, 8, 0.35);
+}
+.cs-acct-label {
+  margin: 0;
+  font-size: 13px;
+  color: var(--smoke);
+}
+.cs-acct-phone {
+  margin: 2px 0 14px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+}
+.cs-acct-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.cs-acct-links a, .cs-acct-links button {
+  min-height: 36px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #9a5b0c;
+  text-decoration: none;
+}
+.cs-acct-links a:hover, .cs-acct-links button:hover {
+  text-decoration: underline;
+}
+.cs-nav-phone {
+  display: none;
+  margin: 8px 14px 0;
+  font-size: 13px;
+  color: var(--mist);
+}
+@media (max-width: 820px) {
+  .cs-bar {
+    gap: 4px;
+  }
+  .cs-order-link {
+    margin-left: auto;
+  }
+  .cs-bag {
+    margin-left: 0;
+  }
+  .cs-acct {
+    display: none;
+  }
+  .cs-nav-phone {
+    display: block;
+  }
+}
+
+/* ===== Home: panel that rises over the hero ===== */
+.cs-pull-card {
+  transform: translateY(calc((1 - var(--p, 1)) * 64px));
+  will-change: transform;
+}
+.cs-pull-h,
+.cs-pull-card .cs-step {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s var(--ease-out), transform 0.85s var(--ease-out);
+}
+.cs-pull.in .cs-pull-h,
+.cs-pull.in .cs-step {
+  opacity: 1;
+  transform: none;
+}
+.cs-pull.in .cs-step:nth-child(1) { transition-delay: 0.12s; }
+.cs-pull.in .cs-step:nth-child(2) { transition-delay: 0.24s; }
+.cs-pull.in .cs-step:nth-child(3) { transition-delay: 0.36s; }
+@media (prefers-reduced-motion: reduce) {
+  .cs-pull-card { transform: none; }
+  .cs-pull-h, .cs-pull-card .cs-step { opacity: 1; transform: none; transition: none; }
+  .cs-acct-pop { transition: none; }
+}
+
+/* ===== Menu page: sidebar + product tiles ===== */
+.cs-menu {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 72px;
+  align-items: start;
+  padding-top: 56px;
+  padding-bottom: 96px;
+}
+.cs-side {
+  position: sticky;
+  top: 92px;
+}
+.cs-side-title {
+  margin: 0 0 16px;
+  padding: 0 16px 14px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: #9a5b0c;
+}
+.cs-side .cs-search {
+  max-width: none;
+  margin-bottom: 12px;
+}
+.cs-cats {
+  display: flex;
+  flex-direction: column;
+}
+.cs-cat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 62px;
+  padding: 0 16px;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--roast);
+  font-size: 1.15rem;
+  text-align: left;
+}
+.cs-cat i {
+  font-style: normal;
+  font-size: 14px;
+  color: var(--smoke);
+}
+.cs-cat:hover {
+  background: var(--sand);
+}
+.cs-cat.on {
+  background: var(--sand);
+  color: #9a5b0c;
+}
+.cs-acc summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 62px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 1.15rem;
+  cursor: pointer;
+  list-style: none;
+}
+.cs-acc summary::-webkit-details-marker {
+  display: none;
+}
+.cs-acc summary::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid #9a5b0c;
+  border-bottom: 2px solid #9a5b0c;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+.cs-acc[open] summary::after {
+  transform: rotate(-135deg);
+}
+.cs-acc .cs-chips {
+  padding: 16px;
+  background: var(--sand);
+}
+.cs-menu-h1 {
+  margin: 0 0 56px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 3.4vw, 2.8rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.cs-menu-group {
+  margin-bottom: 64px;
+}
+.cs-menu-h2 {
+  margin: 0 0 28px;
+  font-weight: 400;
+  font-size: clamp(1.4rem, 2.2vw, 1.8rem);
+}
+.cs-menu-h2 span {
+  color: var(--smoke);
+}
+.cs-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+}
+/* Product tile: flat square image with the name underneath */
+.cs-pcard {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+.cs-pcard:hover {
+  transform: none;
+  box-shadow: none;
+}
+.cs-pimg {
+  border-radius: 0;
+  background-color: var(--sand);
+}
+.cs-pbody {
+  padding: 12px 4px 0;
+}
+.cs-pname {
+  margin: 0 0 2px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 1rem;
+}
+.cs-pcard:hover .cs-pname {
+  color: #9a5b0c;
+}
+@media (max-width: 1100px) {
+  .cs-menu { grid-template-columns: 280px minmax(0, 1fr); gap: 40px; }
+  .cs-menu-grid { grid-template-columns: repeat(2, 1fr); gap: 28px; }
+}
+@media (max-width: 860px) {
+  .cs-menu { grid-template-columns: 1fr; gap: 32px; padding-top: 32px; }
+  .cs-side { position: static; }
+  .cs-cats { flex-direction: row; gap: 8px; overflow-x: auto; margin-bottom: 8px; }
+  .cs-cat { width: auto; min-height: 44px; gap: 8px; border: 1px solid var(--line); border-radius: 999px; font-size: 14px; white-space: nowrap; }
+  .cs-acc summary { min-height: 52px; font-size: 1rem; }
+  .cs-menu-h1 { margin-bottom: 32px; }
+}

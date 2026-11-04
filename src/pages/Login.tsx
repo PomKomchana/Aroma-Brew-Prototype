@@ -43,12 +43,9 @@ export default function Login() {
   return (
     <div className="login-wrap">
       <div className="login-inner">
-        <p className="member-back">
-          <Link to="/member">Member? Check your points →</Link>
-          </p>
         <div className="login-head">
           <p className="login-kicker">Staff Management System</p>
-          <h1 className="login-title">Aroma Brew</h1>
+          <h1 className="login-title"><Link to="/" className="login-logo">Aroma <span>Brew</span></Link></h1>
         </div>
         <div className="login-card">
           <h2>Log In</h2>

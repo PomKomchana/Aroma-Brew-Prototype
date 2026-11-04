@@ -65,7 +65,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="app">
       <aside className="sidebar">
         <div className="side-head">
-          <p className="side-brand">Aroma Brew</p>
+          <p className="side-brand">Aroma <span>Brew</span></p>
           <p className="side-name">{employee.name}</p>
           <p className="side-role">{ROLE_LABEL[employee.role]}</p>
           {employee.role === 'cashier' && shiftId && (
