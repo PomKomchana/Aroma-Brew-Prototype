@@ -41,7 +41,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-
+      
       <section className="cs-sec">
         <div className="cs-wrap cs-cards">
           <Link to="/rewards" className="cs-card">
@@ -73,7 +73,7 @@ export default function Home() {
           </Link>
         </div>
       </section>
-
+      
       <section className="cs-sec cs-sec-sand">
         <div className="cs-wrap">
           <p className="cs-kicker">Browse</p>
@@ -88,7 +88,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-
+      
       <section className="cs-band">
         <div className="cs-wrap cs-band-in">
           <div>

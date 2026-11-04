@@ -14,6 +14,7 @@ export default function Stores() {
   }, [])
 
   return (
+    // Page for listing branch locations
     <div className="cs-wrap cs-page">
       <p className="cs-kicker">Visit us</p>
       <h1 className="cs-h1">Find us</h1>

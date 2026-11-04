@@ -31,6 +31,7 @@ export default function CustomerLayout() {
   }, [])
 
   return (
+    // Customer layout with sticky header, navigation, and three-column footer
     <div className="cs">
       <a className="cs-skip" href="#main-content">Skip to content</a>
       <header className={minimal ? 'cs-head min' : 'cs-head'}>

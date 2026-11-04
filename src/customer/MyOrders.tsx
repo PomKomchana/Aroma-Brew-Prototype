@@ -25,9 +25,13 @@ export default function MyOrders() {
     <div className="cs-wrap cs-page">
       <p className="cs-kicker">Order ahead</p>
       <h1 className="cs-h1">My pre-orders</h1>
+      <div className="cs-actions" style={{ marginBottom: 24 }}>
+        <Link className="cs-auth-btn" to="/menu">+ New pre-order</Link>
+        <Link className="cs-auth-btn ghost" to="/basket">View basket</Link>
+      </div>
       {error && <p className="error">{error}</p>}
       {!rows && !error && <p className="cs-muted">Loading…</p>}
-      {rows && rows.length === 0 && <><p className="cs-muted">You have not pre-ordered yet.</p><Link className="cs-btn" to="/menu">View menu</Link></>}
+      {rows && rows.length === 0 && <p className="cs-muted">You have not pre-ordered yet.</p>}
       <div style={{ maxWidth: 640 }}>
         {(rows ?? []).map((o) => (
           <Link key={o.preorder_id} to={`/my-orders/${o.preorder_id}`} className="cs-hist" style={{ textDecoration: 'none' }}>
