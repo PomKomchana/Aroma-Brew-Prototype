@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Icon } from '../components/Icon'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Shell } from '../components/Shell'
@@ -21,7 +22,7 @@ interface Draft { po_id: number | null; supplier_id: string; expected_date: stri
 
 const isOverdue = (po: PurchaseOrder) => (po.status === 'sent' || po.status === 'partial') && !!po.expected_date && po.expected_date.slice(0, 10) < todayStr()
 
-/** สร้างและติดตามสถานะใบสั่งซื้อ: draft → sent → partial → received (หรือ cancelled) */
+/** Create purchase orders and track their status: draft -> sent -> partial -> received (or cancelled) */
 export default function PurchaseOrders() {
   const { employee } = useAuth()
   const emp = employee!.employee_id
@@ -203,7 +204,7 @@ export default function PurchaseOrders() {
                 <ol className="steps" aria-label="Order progress">
                   {STEPS.map((st, i) => (
                     <li key={st.key} className={i < STEP_INDEX[view.status] ? 'done' : i === STEP_INDEX[view.status] ? 'now' : ''}>
-                      <i>{i < STEP_INDEX[view.status] || view.status === 'received' ? '✓' : i + 1}</i>{st.label}
+                      <i>{i < STEP_INDEX[view.status] || view.status === 'received' ? <Icon name="check" size={13} /> : i + 1}</i>{st.label}
                     </li>
                   ))}
                 </ol>
@@ -322,7 +323,7 @@ export default function PurchaseOrders() {
                     <input className="input" inputMode="decimal" placeholder={si ? `Qty (${si.unit})` : 'Qty'} aria-label="Quantity" value={l.qty} onChange={(e) => setLine(i, { qty: e.target.value })} />
                     <input className="input" inputMode="decimal" placeholder="Price / unit" aria-label="Price per unit" value={l.unit_price} onChange={(e) => setLine(i, { unit_price: e.target.value })} />
                     <span className="po-line-total">{money((Number(l.qty) || 0) * (Number(l.unit_price) || 0))}</span>
-                    <button className="link-btn danger" aria-label="Remove line" onClick={() => setEdit({ ...edit, lines: edit.lines.filter((_, j) => j !== i) })}>✕</button>
+                    <button className="link-btn danger" aria-label="Remove line" onClick={() => setEdit({ ...edit, lines: edit.lines.filter((_, j) => j !== i) })}><Icon name="x" size={15} /></button>
                   </div>
                 )
               })}

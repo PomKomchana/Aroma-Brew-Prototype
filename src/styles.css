@@ -331,7 +331,7 @@ button { cursor: pointer; }
 .side-brand span { color: var(--gold); }
 .side-name { margin-top: 8px; color: var(--gold); font-size: 14px; font-weight: 500; }
 .side-role { color: var(--mist); font-size: 13px; }
-.nav-item { min-height: 46px; padding: 0 16px; border-radius: 999px; color: var(--cream); font-size: 15px; font-weight: 500; transition: background-color 0.2s ease, color 0.2s ease; }
+.nav-item { min-height: 46px; padding: 0 16px; border-radius: 999px; color: var(--cream); font-size: 15px; font-weight: 500; transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
 .nav-item:hover { background: rgba(245, 237, 224, 0.1); color: var(--gold); }
 .nav-item.active { background: var(--amber); color: var(--espresso); font-weight: 600; }
 .side-foot button { color: var(--mist); }
@@ -342,7 +342,7 @@ button { cursor: pointer; }
 .page-head { margin-bottom: 24px; }
 
 .btn, .mini-btn, .confirm, .pay, .opt, .tab, .btn-amber, .qty button, .member-x { border-radius: 999px; }
-.btn { background: var(--amber); color: var(--espresso); letter-spacing: 0.02em; transition: background-color 0.2s ease; }
+.btn { background: var(--amber); color: var(--espresso); letter-spacing: 0.02em; transition: background-color var(--dur-fast) var(--ease); }
 .btn:hover:not(:disabled) { background: var(--gold); }
 .btn-dark { background: var(--roast); color: var(--cream); }
 .btn-dark:hover:not(:disabled) { background: var(--bark); }
@@ -360,7 +360,7 @@ button { cursor: pointer; }
 .kpi.accent b { color: #9a5b0c; }
 .tbl th { letter-spacing: 0.02em; background: var(--paper); }
 .modal-title { font-weight: 800; }
-.menu-item { border: 1px solid var(--line); border-radius: 16px; transition: border-color 0.2s ease; }
+.menu-item { border: 1px solid var(--line); border-radius: 16px; transition: border-color var(--dur-fast) var(--ease); }
 .menu-item:hover { border-color: var(--amber); }
 .menu-name { font-weight: 500; }
 .menu-price { color: #9a5b0c; font-weight: 600; font-size: 13px; }
@@ -373,3 +373,28 @@ button { cursor: pointer; }
 .dark-field span, .field span { letter-spacing: 0.04em; }
 .demo button { border-radius: 12px; }
 @media (max-width: 900px) { .sidebar { width: 72px; } .page { padding: 24px 20px 48px; } .nav-item { padding: 0 14px; } }
+
+/* ===== Language switch (EN | TH) ===== */
+.lang-switch { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; align-items: center; height: 36px; padding: 3px; border-radius: 999px; border: 1px solid transparent; z-index: 30; }
+.lang-switch button { position: relative; z-index: 1; min-width: 44px; height: 100%; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; cursor: pointer; }
+.lang-thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 999px; background: var(--amber); box-shadow: 0 2px 8px rgba(212, 145, 58, 0.4); transition: transform var(--dur) var(--ease); }
+.lang-thumb[data-pos='th'] { transform: translateX(100%); }
+.lang-switch.dark { background: rgba(245, 237, 224, 0.12); border-color: rgba(245, 237, 224, 0.25); backdrop-filter: blur(8px); }
+.lang-switch.dark button { color: var(--cream); }
+.lang-switch.dark button.on { color: var(--espresso); }
+.lang-switch.light { background: var(--sand); border-color: var(--line); }
+.lang-switch.light button { color: var(--smoke); }
+.lang-switch.light button.on { color: var(--espresso); }
+.lang-switch button:not(.on):hover { color: var(--amber); }
+.lang-float { position: absolute; top: 22px; right: 28px; z-index: 40; animation: rise var(--dur-slow) var(--ease) 200ms both; }
+.lang-login { position: absolute; top: 20px; right: 20px; z-index: 5; }
+.cs-bar .lang-switch { margin-left: 4px; flex-shrink: 0; }
+
+/* ===== Clean white line icons (staff) ===== */
+.ico { flex-shrink: 0; display: block; }
+.nav-item .ico { width: 20px; height: 20px; color: #fff; opacity: 0.92; }
+.nav-item.active .ico { color: var(--espresso); opacity: 1; }
+.side-foot button { display: inline-flex; align-items: center; gap: 8px; }
+.ico-inline { display: inline-block; vertical-align: -3px; margin-right: 6px; }
+.link-btn .ico, .modal-x .ico { vertical-align: middle; }
+@media (max-width: 900px) { .lang-float { top: 12px; right: 14px; } }

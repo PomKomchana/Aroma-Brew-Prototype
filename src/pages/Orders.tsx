@@ -6,7 +6,7 @@ import OrdersTable from '../components/OrdersTable'
 import { errMsg, rpc } from '../lib/api'
 import type { OrderRow } from '../lib/types'
 
-/** [S08 คิวออเดอร์] บิลของกะที่เปิดอยู่ ยกเลิกได้เฉพาะกะนี้ */
+/** [S08 Order queue] Bills of the open shift. They can only be cancelled during this shift. */
 export default function Orders() {
   const { employee, shiftId } = useAuth()
   const [rows, setRows] = useState<OrderRow[]>([])

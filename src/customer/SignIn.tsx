@@ -106,7 +106,7 @@ export default function SignIn() {
           <h1 className="cs-auth-h">Enter the code.</h1>
           <p className="cs-auth-help" style={{ marginTop: 0 }}>Sent to {phone.slice(0, 2)}x-xxx-{phone.slice(-4)} · valid for 5 minutes</p>
           <form onSubmit={(e) => { e.preventDefault(); verify() }}>
-            {/* DEMO ONLY: ของจริงต้องส่ง SMS/LINE และลบกล่องนี้ */}
+            {/* DEMO ONLY: in production, send the code by SMS/LINE and remove this box */}
             <p className="cs-auth-demo">Demo code: <b>{demoCode}</b></p>
             <label className="cs-auth-label" htmlFor="cs-code">6-digit code</label>
             <input id="cs-code" className="cs-auth-input" inputMode="numeric" maxLength={6} autoFocus autoComplete="one-time-code"

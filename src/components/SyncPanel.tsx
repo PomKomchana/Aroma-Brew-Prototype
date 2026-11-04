@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { discardOrder, localLabel, retryFailed, syncQueue, useOnline, useQueue, useSyncing, type SyncReport } from '../lib/offlineQueue'
 import { money } from '../lib/pos'
 
-/** รายการบิลที่ขายตอนออฟไลน์และยังไม่ซิงค์ [NFR-04] */
+/** Bills sold while offline that have not synced yet [NFR-04] */
 export default function SyncPanel({ onClose }: { onClose: () => void }) {
   const queue = useQueue()
   const online = useOnline()

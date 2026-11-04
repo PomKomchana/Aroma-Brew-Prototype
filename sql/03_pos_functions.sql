@@ -19,13 +19,13 @@ begin
     'tier', c.membership_tier);
 end $$;
 
--- Shift Summary [S09 ปิดกะ]: Sales breakdown by payment channel
+-- Shift Summary [S09 Close shift]: Sales breakdown by payment channel
 create or replace function get_shift_summary(p_shift_id int) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare s shift%rowtype; v_orders int; v_total numeric; v_by jsonb;
 begin
   select * into s from shift where shift_id = p_shift_id;
-  if not found then raise exception 'ไม่พบกะ'; end if;
+  if not found then raise exception 'Shift not found'; end if;
 
   select count(*), coalesce(sum(total_price),0) into v_orders, v_total
     from orders where shift_id = p_shift_id and status = 'paid';

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Icon } from '../components/Icon'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Shell } from '../components/Shell'
@@ -19,7 +20,7 @@ interface Draft {
 
 const blank: Draft = { supplier_id: null, name: '', contact_name: '', phone_number: '', address: '', is_active: true, ingredients: [] }
 
-/** ข้อมูลซัพพลายเออร์ + รายการวัตถุดิบที่จัดส่งแต่ละราย (ราคา/หน่วย, lead time) */
+/** Supplier details + the ingredients each supplier delivers (price per unit, lead time) */
 export default function Suppliers() {
   const { employee } = useAuth()
   const emp = employee!.employee_id
@@ -175,7 +176,7 @@ export default function Suppliers() {
                     </select>
                     <input className="input" inputMode="decimal" placeholder={unit ? `Price per ${unit} (฿)` : 'Price (฿)'} aria-label="Unit price" value={l.unit_price} onChange={(e) => setLine(i, { unit_price: e.target.value })} />
                     <input className="input" inputMode="numeric" placeholder="Lead time (days)" aria-label="Lead time in days" value={l.lead_time_days} onChange={(e) => setLine(i, { lead_time_days: e.target.value })} />
-                    <button className="link-btn danger" aria-label="Remove ingredient" onClick={() => setEdit({ ...edit, ingredients: edit.ingredients.filter((_, j) => j !== i) })}>✕</button>
+                    <button className="link-btn danger" aria-label="Remove ingredient" onClick={() => setEdit({ ...edit, ingredients: edit.ingredients.filter((_, j) => j !== i) })}><Icon name="x" size={15} /></button>
                   </div>
                 )
               })}

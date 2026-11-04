@@ -8,7 +8,7 @@ import type { Promotion } from '../lib/types'
 type Row = Promotion & { condition: string | null }
 type Draft = { promotion_id: number | null; name: string; discount_type: 'percent' | 'fixed'; value: string; condition: string; start_date: string; end_date: string; status: string }
 
-/** [S16 โปรโมชัน] ระบบเลือกส่วนลดที่ดีที่สุดให้อัตโนมัติที่ POS */
+/** [S16 Promotions] The POS automatically applies the best discount. */
 export default function Promotions() {
   const { employee } = useAuth()
   const emp = employee!.employee_id
@@ -59,7 +59,7 @@ export default function Promotions() {
                   <tr key={r.promotion_id}>
                     <td>{r.name}</td>
                     <td>{r.discount_type === 'percent' ? `${Number(r.value)}%` : money(Number(r.value))}</td>
-                    <td>{r.start_date} → {r.end_date}</td>
+                    <td>{r.start_date} – {r.end_date}</td>
                     <td><span className={cls}>{label}</span></td>
                     <td><button className="link-btn" onClick={() => { setError(''); setEdit({ promotion_id: r.promotion_id, name: r.name, discount_type: r.discount_type, value: String(r.value), condition: r.condition ?? '', start_date: r.start_date, end_date: r.end_date, status: r.status }) }}>Edit</button></td>
                   </tr>

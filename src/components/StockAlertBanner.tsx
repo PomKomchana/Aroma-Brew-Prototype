@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Icon } from './Icon'
 import { useAuth } from '../auth/AuthContext'
 import { fmtDate, fmtQty } from '../lib/api'
 import { useStockAlerts } from '../lib/stockAlerts'
@@ -19,8 +20,8 @@ export default function StockAlertBanner() {
   return (
     <div className="alert-banner" role="alert">
       <div className="alert-head">
-        <b>⚠ {data.count} ingredient{data.count > 1 ? 's' : ''} need attention</b>
-        <Link to="/purchasing?new=1" className="alert-link">Create purchase order →</Link>
+        <b><Icon name="alert" size={16} className="ico-inline" />{data.count} ingredient{data.count > 1 ? 's' : ''} need attention</b>
+        <Link to="/purchasing?new=1" className="alert-link">Create purchase order <Icon name="next" size={14} className="ico-inline" /></Link>
       </div>
       {rows.slice(0, MAX_SHOWN).map((x) => (
         <div className="alert-row" key={x.ingredient_id}>

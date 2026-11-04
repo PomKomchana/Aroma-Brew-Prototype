@@ -4,13 +4,13 @@ import type { PaymentMethod } from './pos'
 
 /**
  * Offline queue [NFR-04]
- * - ตอนออฟไลน์: เก็บออเดอร์ที่ชำระแล้วลง localStorage (สูงสุด 500 บิล ตาม SRS)
- * - ตอนกลับมาออนไลน์: ส่งทีละบิลตามลำดับเวลาผ่าน RPC sync_offline_order (idempotent ด้วย clientId)
- * - error จากฐานข้อมูล (มี code) = บิลนี้ใช้ไม่ได้ -> status 'failed' รอคนตัดสิน
- *   error จากเครือข่าย (ไม่มี code) = หยุดและลองใหม่รอบหน้า ไม่ทิ้งบิล
+ * - While offline: paid orders are stored in localStorage (max 500 bills, per the SRS)
+ * - When back online: bills are sent one at a time, oldest first, via the sync_offline_order RPC (idempotent by clientId)
+ * - Database error (has a code) = this bill is invalid -> status 'failed', waits for a person to decide
+ *   Network error (no code) = stop and retry on the next run; the bill is never dropped
  */
 
-export const OFFLINE_METHODS: PaymentMethod[] = ['cash'] // ออฟไลน์รับเงินสดอย่างเดียว (บัตร/พร้อมเพย์ต้องใช้เครือข่าย)
+export const OFFLINE_METHODS: PaymentMethod[] = ['cash'] // Cash only while offline (card / PromptPay need the network)
 export const MAX_QUEUE = 500
 const QUEUE_KEY = 'aroma-brew-offline-queue-v1'
 const SEQ_KEY = 'aroma-brew-offline-seq'
@@ -120,7 +120,7 @@ function setSyncing(v: boolean) {
 export interface SyncReport {
   synced: number
   failed: number
-  stopped: boolean // หยุดกลางทางเพราะเครือข่าย
+  stopped: boolean // stopped part-way because of a network problem
   notes: string[]
 }
 
@@ -143,7 +143,7 @@ export async function syncQueue(): Promise<SyncReport> {
       })
       if (error) {
         if (!error.code) {
-          report.stopped = true // เครือข่ายหลุด: ลองใหม่ทีหลัง
+          report.stopped = true // network lost: retry later
           break
         }
         write(snapshot.map((x) => (x.clientId === q.clientId ? { ...x, status: 'failed', error: error.message } : x)))
@@ -162,7 +162,7 @@ export async function syncQueue(): Promise<SyncReport> {
   return report
 }
 
-/** ซิงค์อัตโนมัติ: ตอนกลับมาออนไลน์ + ทุก 30 วินาทีถ้ายังค้าง (SRS: ซิงค์ภายใน 5 นาที) */
+/** Auto-sync: when the device comes back online, then every 30 seconds while bills are pending (SRS: sync within 5 minutes) */
 export function useAutoSync() {
   const queue = useQueue()
   const online = useOnline()

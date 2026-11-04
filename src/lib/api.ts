@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import { friendlyError } from './pos'
 
-/** เรียก RPC แล้วโยน Error ข้อความอ่านง่าย [ใช้กับฟังก์ชันใน sql/04] */
+/** Calls a Supabase RPC and throws an Error with a readable message [used by the functions in sql/04] */
 export async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.rpc(fn, args)
   if (error) throw new Error(friendlyError(error.message))

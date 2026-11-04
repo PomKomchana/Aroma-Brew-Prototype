@@ -3,7 +3,7 @@ import { errMsg, fmtDateTime, rpc } from '../lib/api'
 import { PAYMENT_LABEL, money, type PaymentMethod } from '../lib/pos'
 import type { OrderRow } from '../lib/types'
 
-/** ตารางบิล + ปุ่มยกเลิกบิล [FR-25] ใช้ร่วมกันที่ S08 [cashier] และ S17 [owner] */
+/** Bills table with a cancel-bill button [FR-25]. Shared by S08 (cashier) and S17 (owner). */
 export default function OrdersTable({ rows, emp, canCancel, onChanged }: { rows: OrderRow[]; emp: number; canCancel: (o: OrderRow) => boolean; onChanged: () => void }) {
   const [target, setTarget] = useState<OrderRow | null>(null)
   const [reason, setReason] = useState('')

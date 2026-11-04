@@ -1,151 +1,176 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { Shell } from '../components/Shell'
-import StockAlertBanner from '../components/StockAlertBanner'
-import { errMsg, fmtDate, fmtDateTime, fmtQty, poNo, rpc, todayStr } from '../lib/api'
-import { refreshStockAlerts } from '../lib/stockAlerts'
-import { money } from '../lib/pos'
-import type { IngredientRow, MovementRow, PurchaseOrder } from '../lib/types'
+import OrdersTable from '../components/OrdersTable'
+import { errMsg, fmtDate, fmtDateTime, rpc, todayStr } from '../lib/api'
+import { PAYMENT_LABEL, money, type PaymentMethod } from '../lib/pos'
+import type { AuditRow, OrderRow, ReportGroup, SalesReport } from '../lib/types'
 
-type Tab = 'list' | 'receive' | 'count' | 'history'
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'list', label: 'Ingredients' },
-  { id: 'receive', label: 'Receive Goods' },
-  { id: 'count', label: 'Stock Count' },
-  { id: 'history', label: 'History' },
+type Mode = 'day' | 'month' | 'year' | 'custom'
+const MODES: { id: Mode; label: string }[] = [
+  { id: 'day', label: 'Day' },
+  { id: 'month', label: 'Month' },
+  { id: 'year', label: 'Year' },
+  { id: 'custom', label: 'Custom range' },
 ]
-const MOVE_LABEL: Record<string, string> = { sale: 'Sale', receive: 'Received', adjust: 'Adjusted', waste: 'Waste', return: 'Returned' }
-
-/** [S10 สต็อกวัตถุดิบ] -> [S11 รับของเข้าคลัง] / [S12 ตรวจนับสต็อก] */
-export default function Stock() {
-  const { employee } = useAuth()
-  const emp = employee!.employee_id
-  const [params] = useSearchParams()
-  const poParam = Number(params.get('po')) || null
-  const [tab, setTab] = useState<Tab>(poParam ? 'receive' : 'list')
-  const [rows, setRows] = useState<IngredientRow[]>([])
-  const [error, setError] = useState('')
-  const [msg, setMsg] = useState('')
-
-  const load = useCallback(() => {
-    rpc<IngredientRow[]>('get_ingredients', { p_emp: emp })
-      .then(setRows)
-      .catch((e) => setError(errMsg(e)))
-  }, [emp])
-  useEffect(load, [load])
-
-  const alerts = rows.filter((r) => r.low || r.near_expiry || Number(r.stock_qty) <= 0).length
-  const changed = (m: string) => {
-    setMsg(m)
-    load()
-    void refreshStockAlerts(emp)
-  }
-
-  return (
-    <Shell>
-      <div className="page">
-        <div className="page-head">
-          <div>
-            <h2>Inventory</h2>
-            <p className="sub">Ingredient stock, goods receiving and stock counts</p>
-          </div>
-        </div>
-        <div className="tabs flat" role="tablist">
-          {TABS.map((t) => (
-            <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'tab on' : 'tab'} onClick={() => { setTab(t.id); setMsg('') }}>
-              {t.label}
-              {t.id === 'list' && alerts > 0 && ` (${alerts})`}
-            </button>
-          ))}
-        </div>
-        {error && <p className="error" role="alert">{error}</p>}
-        {msg && <p className="notice" role="status">{msg}</p>}
-
-        {tab === 'list' && (
-          <>
-            <StockAlertBanner />
-            <List rows={rows} emp={emp} onChanged={changed} />
-          </>
-        )}
-        {tab === 'receive' && <ReceiveTab rows={rows} emp={emp} initialPo={poParam} onDone={changed} />}
-        {tab === 'count' && <Count rows={rows} emp={emp} onDone={changed} />}
-        {tab === 'history' && <History rows={rows} emp={emp} />}
-      </div>
-    </Shell>
-  )
+const pad = (n: number) => String(n).padStart(2, '0')
+const fmtYmd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+const shiftDay = (s: string, n: number) => {
+  const [y, m, d] = s.split('-').map(Number)
+  return fmtYmd(new Date(y, m - 1, d + n))
+}
+const shiftMonth = (s: string, n: number) => {
+  const [y, m] = s.split('-').map(Number)
+  const d = new Date(y, m - 1 + n, 1)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`
+}
+const monthName = (key: string, long = false) => {
+  const [y, m] = key.split('-').map(Number)
+  return new Date(y, m - 1, 1).toLocaleString('en-GB', long ? { month: 'long', year: 'numeric' } : { month: 'short' })
 }
 
-/** S10 */
-function List({ rows, emp, onChanged }: { rows: IngredientRow[]; emp: number; onChanged: (m: string) => void }) {
-  const [edit, setEdit] = useState<IngredientRow | null>(null)
-  const [reorder, setReorder] = useState('')
-  const [days, setDays] = useState('')
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
-
-  function open(r: IngredientRow) {
-    setEdit(r)
-    setReorder(String(r.reorder_point))
-    setDays(String(r.expiry_alert_days))
-    setError('')
+/** Turn the picker state into the date range + bucket size the report function expects */
+function periodRange(mode: Mode, day: string, month: string, year: number, from: string, to: string): { from: string; to: string; group: ReportGroup; label: string } | null {
+  if (mode === 'day') return day ? { from: day, to: day, group: 'hour', label: fmtDate(day) } : null
+  if (mode === 'month') {
+    if (!/^\d{4}-\d{2}$/.test(month)) return null
+    const [y, m] = month.split('-').map(Number)
+    return { from: `${month}-01`, to: `${month}-${pad(new Date(y, m, 0).getDate())}`, group: 'day', label: monthName(month, true) }
   }
+  if (mode === 'year') {
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) return null
+    return { from: `${year}-01-01`, to: `${year}-12-31`, group: 'month', label: String(year) }
+  }
+  if (!from || !to || to < from) return null
+  const [fy, fm, fd] = from.split('-').map(Number)
+  const [ty, tm, td] = to.split('-').map(Number)
+  const days = Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / 86400000)
+  return { from, to, group: days === 0 ? 'hour' : days <= 92 ? 'day' : 'month', label: from === to ? fmtDate(from) : `${fmtDate(from)} – ${fmtDate(to)}` }
+}
 
-  async function save() {
-    if (!edit) return
-    setBusy(true)
+/** Sales by mode: day / month / year, or a custom date range */
+function SalesSummary({ emp }: { emp: number }) {
+  const thisYear = new Date().getFullYear()
+  const [mode, setMode] = useState<Mode>('month')
+  const [day, setDay] = useState(todayStr())
+  const [month, setMonth] = useState(todayStr().slice(0, 7))
+  const [year, setYear] = useState(thisYear)
+  const [from, setFrom] = useState(todayStr(-29))
+  const [to, setTo] = useState(todayStr())
+  const [data, setData] = useState<SalesReport | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const range = useMemo(() => periodRange(mode, day, month, year, from, to), [mode, day, month, year, from, to])
+
+  useEffect(() => {
+    if (!range) return
+    let alive = true
+    setLoading(true)
     setError('')
-    try {
-      await rpc('set_reorder_point', { p_emp: emp, p_ingredient: edit.ingredient_id, p_reorder: Number(reorder), p_expiry_days: Number(days) })
-      setEdit(null)
-      onChanged(`Alert settings updated for ${edit.name}`)
-    } catch (e) {
-      setError(errMsg(e))
-    } finally {
-      setBusy(false)
+    rpc<SalesReport>('get_sales_report', { p_emp: emp, p_from: range.from, p_to: range.to, p_group: range.group })
+      .then((d) => alive && setData(d))
+      .catch((e) => alive && setError(errMsg(e)))
+      .finally(() => alive && setLoading(false))
+    return () => {
+      alive = false
     }
+  }, [emp, range?.from, range?.to, range?.group]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const today = todayStr()
+  const step = (n: number) => {
+    if (mode === 'day') setDay((d) => shiftDay(d, n))
+    else if (mode === 'month') setMonth((m) => shiftMonth(m, n))
+    else if (mode === 'year') setYear((y) => y + n)
+  }
+  const nextDisabled = mode === 'day' ? day >= today : mode === 'month' ? month >= today.slice(0, 7) : year >= thisYear
+
+  const buckets = data && range && data.from === range.from && data.to === range.to && data.group === range.group ? data.buckets : null
+  const max = Math.max(1, ...(buckets?.map((b) => Number(b.sales)) ?? [0]))
+  const best = buckets && buckets.reduce((a, b) => (Number(b.sales) > Number(a.sales) ? b : a), buckets[0])
+  const label = (key: string) => (range?.group === 'hour' ? `${key}:00` : range?.group === 'month' ? monthName(key) : fmtDate(key).slice(0, 6))
+  const barLabel = (key: string) => (range?.group === 'hour' ? key : range?.group === 'month' ? monthName(key) : key.slice(8))
+  const unit = range?.group === 'hour' ? 'hour' : range?.group === 'month' ? 'month' : 'day'
+  const margin = data && data.sales > 0 ? Math.round((data.profit / data.sales) * 100) : 0
+
+  function exportCsv() {
+    if (!data || !buckets) return
+    const lines = [[unit, 'bills', 'sales'], ...buckets.map((b) => [b.key, b.orders, b.sales])]
+    const blob = new Blob(['\ufeff' + lines.map((l) => l.join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `sales-summary_${data.from}_${data.to}.csv`
+    a.click()
+    URL.revokeObjectURL(a.href)
   }
 
   return (
     <>
-      <div className="table-wrap">
-        <table className="tbl">
-          <thead>
-            <tr><th>Ingredient</th><th className="num">In stock</th><th className="num">Reorder point</th><th>Nearest expiry</th><th>Status</th><th /></tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && <tr><td colSpan={6} className="tbl-empty">No ingredients</td></tr>}
-            {rows.map((r) => {
-              const out = Number(r.stock_qty) <= 0
-              return (
-                <tr key={r.ingredient_id}>
-                  <td>{r.name}</td>
-                  <td className="num">{fmtQty(r.stock_qty)} {r.unit}</td>
-                  <td className="num">{fmtQty(r.reorder_point)} {r.unit}</td>
-                  <td>{r.nearest_expiry ? fmtDate(r.nearest_expiry) : '–'}</td>
-                  <td>
-                    {!r.low && !r.near_expiry && !out && <span className="badge ok">Normal</span>}{' '}
-                    {out && <span className="badge bad">⚠ Out of stock</span>}
-                    {r.low && !out && <span className="badge bad">⚠ Below reorder point</span>}{' '}
-                    {r.near_expiry && <span className="badge warn">⏰ Expiring soon</span>}
-                  </td>
-                  <td><button className="link-btn" onClick={() => open(r)}>Alert settings</button></td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+      <div className="period-bar">
+        <div className="tabs flat" role="tablist" style={{ padding: 0 }}>
+          {MODES.map((m) => (
+            <button key={m.id} role="tab" aria-selected={mode === m.id} className={mode === m.id ? 'tab on' : 'tab'} onClick={() => setMode(m.id)}>{m.label}</button>
+          ))}
+        </div>
+        <div className="toolbar">
+          {mode !== 'custom' && <button className="mini-btn" aria-label="Previous period" onClick={() => step(-1)}>‹</button>}
+          {mode === 'day' && <input className="input" type="date" aria-label="Day" value={day} max={today} onChange={(e) => setDay(e.target.value)} />}
+          {mode === 'month' && <input className="input" type="month" aria-label="Month" value={month} max={today.slice(0, 7)} onChange={(e) => setMonth(e.target.value)} />}
+          {mode === 'year' && <input className="input" type="number" aria-label="Year" min={2000} max={thisYear} value={year} onChange={(e) => setYear(Number(e.target.value))} style={{ width: 100 }} />}
+          {mode === 'custom' && (
+            <>
+              <input className="input" type="date" aria-label="From" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
+              <span className="muted">–</span>
+              <input className="input" type="date" aria-label="To" value={to} min={from} max={today} onChange={(e) => setTo(e.target.value)} />
+            </>
+          )}
+          {mode !== 'custom' && <button className="mini-btn" aria-label="Next period" disabled={nextDisabled} onClick={() => step(1)}>›</button>}
+          <button className="mini-btn" onClick={exportCsv} disabled={!buckets}>Export CSV</button>
+        </div>
       </div>
-      {edit && (
-        <div className="overlay" role="dialog" aria-modal="true">
-          <div className="modal">
-            <h3 className="modal-title" style={{ marginBottom: 16 }}>Alert settings · {edit.name}</h3>
-            <label className="field"><span>Reorder point ({edit.unit})</span><input inputMode="decimal" value={reorder} onChange={(e) => setReorder(e.target.value)} /><p className="hint">You get a warning when stock falls below this amount.</p></label>
-            <label className="field"><span>Warn before expiry (days)</span><input inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value)} /></label>
-            {error && <p className="error" role="alert">{error}</p>}
-            <div className="modal-actions">
-              <button className="btn btn-dark" style={{ flex: 1 }} onClick={() => setEdit(null)}>Cancel</button>
-              <button className="btn" style={{ flex: 1 }} disabled={busy || reorder === '' || days === '' || !(Number(reorder) >= 0) || !(Number(days) >= 0)} onClick={save}>{busy ? 'Saving…' : 'Save'}</button>
+
+      {!range && <p className="muted">Pick a valid {mode === 'custom' ? 'date range' : mode} to see sales.</p>}
+      {error && <p className="error" role="alert">{error}</p>}
+      {range && !data && !error && <p className="muted">Loading…</p>}
+
+      {range && data && buckets && (
+        <div style={{ opacity: loading ? 0.5 : 1 }}>
+          <p className="muted" style={{ marginTop: 0 }}>
+            Showing <b>{range.label}</b> · by {unit} · shop time (Bangkok)
+          </p>
+          <div className="kpis">
+            <div className="kpi"><p>SALES</p><b>{money(Number(data.sales))}</b><small>{data.orders} bill{data.orders === 1 ? '' : 's'}</small></div>
+            <div className="kpi"><p>AVERAGE BILL</p><b>{money(Number(data.avg_bill))}</b><small>{money(Number(data.discount))} in discounts</small></div>
+            <div className="kpi accent"><p>GROSS PROFIT</p><b>{money(Math.round(Number(data.profit)))}</b><small>{margin}% margin · cost {money(Math.round(Number(data.cost)))}</small></div>
+            <div className="kpi"><p>CANCELLED BILLS</p><b>{data.cancelled}</b><small>{money(Number(data.cancelled_amount))} not counted</small></div>
+          </div>
+          <div className="dash-grid">
+            <div className="card">
+              <p className="sec-label">Sales by {unit}</p>
+              <div className="bars" role="img" aria-label={`Sales by ${unit}`}>
+                {buckets.map((b, i) => (
+                  <div className="bar-col" key={b.key} title={`${label(b.key)}: ${money(Number(b.sales))} · ${b.orders} bill${b.orders === 1 ? '' : 's'}`}>
+                    <div className="bar" style={{ height: `${(Number(b.sales) / max) * 100}%` }} />
+                    <span>{buckets.length > 24 && i % 2 === 1 ? '' : barLabel(b.key)}</span>
+                  </div>
+                ))}
+              </div>
+              {best && Number(best.sales) > 0 && <p className="muted" style={{ margin: '12px 0 0', fontSize: 13 }}>Best {unit}: {label(best.key)} · {money(Number(best.sales))}</p>}
+            </div>
+            <div style={{ display: 'grid', gap: 16, alignContent: 'start' }}>
+              <div className="card">
+                <p className="sec-label">Best sellers</p>
+                {data.top_products.length === 0 && <p className="muted" style={{ margin: 0 }}>No sales in this period</p>}
+                {data.top_products.map((p, i) => (
+                  <div className="rank" key={p.name}><span><i>{i + 1}</i>{p.name}</span><span>{p.qty} · {money(Number(p.revenue))}</span></div>
+                ))}
+              </div>
+              <div className="card">
+                <p className="sec-label">Payment channels</p>
+                {(Object.keys(PAYMENT_LABEL) as PaymentMethod[]).map((m) => (
+                  <div className="rank" key={m}><span>{PAYMENT_LABEL[m]}</span><span>{money(Number(data.by_method[m] ?? 0))}</span></div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -154,283 +179,86 @@ function List({ rows, emp, onChanged }: { rows: IngredientRow[]; emp: number; on
   )
 }
 
-/** S11: รับของเข้าคลัง — อ้างอิงใบสั่งซื้อ หรือรับโดยไม่มีใบสั่งซื้อ */
-function ReceiveTab({ rows, emp, initialPo, onDone }: { rows: IngredientRow[]; emp: number; initialPo: number | null; onDone: (m: string) => void }) {
-  const [mode, setMode] = useState<'po' | 'manual'>('po')
-  return (
-    <>
-      <div className="tabs flat" role="tablist" style={{ paddingBottom: 12 }}>
-        <button role="tab" aria-selected={mode === 'po'} className={mode === 'po' ? 'tab on' : 'tab'} onClick={() => setMode('po')}>Against purchase order</button>
-        <button role="tab" aria-selected={mode === 'manual'} className={mode === 'manual' ? 'tab on' : 'tab'} onClick={() => setMode('manual')}>Without purchase order</button>
-      </div>
-      {mode === 'po' ? <ReceivePo emp={emp} initialPo={initialPo} onDone={onDone} /> : <Receive rows={rows} emp={emp} onDone={onDone} />}
-    </>
-  )
-}
-
-function ReceivePo({ emp, initialPo, onDone }: { emp: number; initialPo: number | null; onDone: (m: string) => void }) {
-  const [pos, setPos] = useState<PurchaseOrder[] | null>(null)
-  const [sel, setSel] = useState<number | null>(initialPo)
-  const [qty, setQty] = useState<Record<number, string>>({})
-  const [cost, setCost] = useState<Record<number, string>>({})
-  const [exp, setExp] = useState<Record<number, string>>({})
+/** [S17 Reports / Audit log] */
+export default function Reports() {
+  const { employee } = useAuth()
+  const emp = employee!.employee_id
+  const [tab, setTab] = useState<'summary' | 'sales' | 'audit'>('summary')
+  const [from, setFrom] = useState(todayStr(-6))
+  const [to, setTo] = useState(todayStr())
+  const [orders, setOrders] = useState<OrderRow[]>([])
+  const [audit, setAudit] = useState<AuditRow[]>([])
   const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
 
   const load = useCallback(() => {
-    rpc<PurchaseOrder[]>('list_purchase_orders', { p_emp: emp, p_statuses: ['sent', 'partial'] })
-      .then(setPos)
-      .catch((e) => setError(errMsg(e)))
-  }, [emp])
+    setError('')
+    if (tab === 'summary') return
+    if (tab === 'sales') rpc<OrderRow[]>('get_orders', { p_emp: emp, p_from: from, p_to: to, p_shift: null }).then(setOrders).catch((e) => setError(errMsg(e)))
+    else rpc<AuditRow[]>('get_audit_log', { p_emp: emp, p_limit: 200 }).then(setAudit).catch((e) => setError(errMsg(e)))
+  }, [tab, emp, from, to])
   useEffect(load, [load])
 
-  const po = pos?.find((p) => p.po_id === sel) ?? null
-  const remaining = (l: PurchaseOrder['lines'][number]) => Math.max(0, Number(l.qty_ordered) - Number(l.qty_received))
-  const entered = po ? po.lines.filter((l) => Number(qty[l.po_detail_id]) > 0) : []
+  const paid = orders.filter((o) => o.status === 'paid')
+  const total = paid.reduce((s, o) => s + Number(o.total_price), 0)
 
-  function pick(id: number | null) {
-    setSel(id)
-    setQty({})
-    setCost({})
-    setExp({})
-    setError('')
+  function exportCsv() {
+    const lines = [['bill', 'time', 'cashier', 'payment', 'total', 'status', 'items'], ...orders.map((o) => [o.order_id, o.order_date, o.cashier, o.method ?? '', o.total_price, o.status, `"${(o.items ?? '').replace(/"/g, '""')}"`])]
+    const blob = new Blob(['\ufeff' + lines.map((l) => l.join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `sales_${from}_${to}.csv`
+    a.click()
+    URL.revokeObjectURL(a.href)
   }
-
-  async function submit() {
-    if (!po) return
-    setBusy(true)
-    setError('')
-    try {
-      const lines = entered.map((l) => ({
-        po_detail_id: l.po_detail_id,
-        qty_received: Number(qty[l.po_detail_id]),
-        unit_cost: Number(cost[l.po_detail_id] ?? l.unit_price),
-        expiry_date: exp[l.po_detail_id] || null,
-      }))
-      const r = await rpc<{ status: string; lots: number }>('receive_po', { p_emp: emp, p_po: po.po_id, p_lines: lines })
-      onDone(`Received ${r.lots} line${r.lots > 1 ? 's' : ''} against ${poNo(po.po_id)} · order is now ${r.status === 'received' ? 'fully received' : 'partially received'}`)
-      pick(r.status === 'received' ? null : po.po_id)
-      load()
-    } catch (e) {
-      setError(errMsg(e))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  if (pos === null) return error ? <p className="error" role="alert">{error}</p> : <p className="muted">Loading…</p>
 
   return (
-    <>
-      {pos.length === 0 && (
-        <div className="card form-card">
-          <p style={{ marginTop: 0 }}>No purchase orders are waiting for goods.</p>
-          <p className="muted" style={{ marginBottom: 0 }}>Create one and mark it as sent in <Link to="/purchasing" className="alert-link">Purchase Orders</Link>, or use “Without purchase order”.</p>
+    <Shell>
+      <div className="page">
+        <div className="page-head">
+          <div><h2>Reports</h2><p className="sub">Sales summary, bill history and audit trail (the log cannot be edited or deleted)</p></div>
+          {tab === 'sales' && (
+            <div className="toolbar">
+              <input className="input" type="date" aria-label="From" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
+              <span className="muted">–</span>
+              <input className="input" type="date" aria-label="To" value={to} min={from} max={todayStr()} onChange={(e) => setTo(e.target.value)} />
+              <button className="mini-btn" onClick={exportCsv} disabled={orders.length === 0}>Export CSV</button>
+            </div>
+          )}
         </div>
-      )}
-      {pos.length > 0 && (
-        <>
-          <label className="field" style={{ maxWidth: 480 }}>
-            <span>Purchase order</span>
-            <select value={sel ?? ''} onChange={(e) => pick(e.target.value ? Number(e.target.value) : null)}>
-              <option value="">Select a purchase order…</option>
-              {pos.map((p) => <option key={p.po_id} value={p.po_id}>{poNo(p.po_id)} · {p.supplier} · {p.status === 'partial' ? 'partly received' : 'sent'}</option>)}
-            </select>
-          </label>
-          {initialPo && !po && sel === initialPo && <p className="notice warn">{poNo(initialPo)} is not waiting for goods (it may be fully received or not sent yet).</p>}
-        </>
-      )}
+        <div className="tabs flat" role="tablist">
+          <button role="tab" aria-selected={tab === 'summary'} className={tab === 'summary' ? 'tab on' : 'tab'} onClick={() => setTab('summary')}>Summary</button>
+          <button role="tab" aria-selected={tab === 'sales'} className={tab === 'sales' ? 'tab on' : 'tab'} onClick={() => setTab('sales')}>Bills</button>
+          <button role="tab" aria-selected={tab === 'audit'} className={tab === 'audit' ? 'tab on' : 'tab'} onClick={() => setTab('audit')}>Audit Log</button>
+        </div>
+        {error && tab !== 'summary' && <p className="error" role="alert">{error}</p>}
 
-      {po && (
-        <>
-          <p className="muted" style={{ marginTop: 0 }}>
-            {po.supplier}{po.expected_date ? ` · expected ${fmtDate(po.expected_date)}` : ''} · ordered {money(Number(po.total_cost))}. Enter what actually arrived; leave a line blank if it was not delivered.
-          </p>
+        {tab === 'summary' && <SalesSummary emp={emp} />}
+
+        {tab === 'sales' && (
+          <>
+            <p className="muted" style={{ marginTop: 0 }}>{paid.length} paid bills · {money(total)}</p>
+            <OrdersTable rows={orders} emp={emp} canCancel={() => true} onChanged={load} />
+          </>
+        )}
+
+        {tab === 'audit' && (
           <div className="table-wrap">
             <table className="tbl">
-              <thead>
-                <tr>
-                  <th>Ingredient</th><th className="num">Ordered</th><th className="num">Received so far</th><th className="num">Remaining</th>
-                  <th style={{ width: 130 }}>Received now</th><th style={{ width: 130 }}>Cost / unit (฿)</th><th style={{ width: 160 }}>Lot expiry</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Time</th><th>By</th><th>Action</th><th>Record</th><th>Before</th><th>After</th></tr></thead>
               <tbody>
-                {po.lines.map((l) => {
-                  const id = l.po_detail_id
-                  const left = remaining(l)
-                  const over = Number(qty[id]) > left
-                  const priceDiff = qty[id] && cost[id] !== undefined && Number(cost[id]) !== Number(l.unit_price)
-                  return (
-                    <tr key={id}>
-                      <td>{l.ingredient}</td>
-                      <td className="num">{fmtQty(l.qty_ordered)} {l.unit}</td>
-                      <td className="num">{fmtQty(l.qty_received)}</td>
-                      <td className="num">{fmtQty(left)}</td>
-                      <td>
-                        <input className="input" inputMode="decimal" aria-label={`Received ${l.ingredient}`} placeholder={left > 0 ? String(left) : '0'} value={qty[id] ?? ''} onChange={(e) => setQty({ ...qty, [id]: e.target.value })} />
-                        {over && <small className="hint-warn">more than ordered</small>}
-                      </td>
-                      <td>
-                        <input className="input" inputMode="decimal" aria-label={`Cost per unit ${l.ingredient}`} value={cost[id] ?? String(l.unit_price)} onChange={(e) => setCost({ ...cost, [id]: e.target.value })} />
-                        {priceDiff && <small className="hint-warn">differs from order ({money(Number(l.unit_price))})</small>}
-                      </td>
-                      <td><input className="input" type="date" min={todayStr()} aria-label={`Expiry ${l.ingredient}`} value={exp[id] ?? ''} onChange={(e) => setExp({ ...exp, [id]: e.target.value })} /></td>
-                    </tr>
-                  )
-                })}
+                {audit.length === 0 && <tr><td colSpan={6} className="tbl-empty">No entries</td></tr>}
+                {audit.map((a) => (
+                  <tr key={a.log_id}>
+                    <td>{fmtDateTime(a.created_at)}</td><td>{a.employee}</td><td>{a.action}</td>
+                    <td>{a.table_name}{a.record_id ? ` #${a.record_id}` : ''}</td>
+                    <td>{a.old_value ?? '–'}</td><td>{a.new_value ?? '–'}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-          {error && <p className="error" role="alert" style={{ marginTop: 12 }}>{error}</p>}
-          <div className="row" style={{ marginTop: 16, maxWidth: 520 }}>
-            <button className="btn btn-dark" onClick={() => setQty(Object.fromEntries(po.lines.filter((l) => remaining(l) > 0).map((l) => [l.po_detail_id, String(remaining(l))])))}>Fill remaining</button>
-            <button className="btn" style={{ flex: 1 }} disabled={busy || entered.length === 0} onClick={submit}>{busy ? 'Saving…' : `Receive into stock${entered.length ? ` (${entered.length} line${entered.length > 1 ? 's' : ''})` : ''}`}</button>
-          </div>
-        </>
-      )}
-    </>
-  )
-}
-
-/** รับของโดยไม่มีใบสั่งซื้อ */
-function Receive({ rows, emp, onDone }: { rows: IngredientRow[]; emp: number; onDone: (m: string) => void }) {
-  const [ing, setIng] = useState('')
-  const [qty, setQty] = useState('')
-  const [cost, setCost] = useState('')
-  const [expiry, setExpiry] = useState('')
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
-  const sel = rows.find((r) => String(r.ingredient_id) === ing)
-
-  async function submit() {
-    setBusy(true)
-    setError('')
-    try {
-      await rpc('receive_stock', { p_emp: emp, p_ingredient: Number(ing), p_qty: Number(qty), p_unit_cost: cost === '' ? null : Number(cost), p_expiry: expiry || null })
-      onDone(`Received ${fmtQty(Number(qty))} ${sel?.unit} of ${sel?.name}`)
-      setQty(''); setCost(''); setExpiry('')
-    } catch (e) {
-      setError(errMsg(e))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <div className="card form-card">
-      <label className="field">
-        <span>Ingredient</span>
-        <select value={ing} onChange={(e) => setIng(e.target.value)}>
-          <option value="">Select ingredient…</option>
-          {rows.map((r) => <option key={r.ingredient_id} value={r.ingredient_id}>{r.name}</option>)}
-        </select>
-      </label>
-      <div className="form-grid">
-        <label className="field"><span>Quantity received {sel ? `(${sel.unit})` : ''}</span><input inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} /></label>
-        <label className="field"><span>Cost per unit (Baht)</span><input inputMode="decimal" value={cost} onChange={(e) => setCost(e.target.value)} /></label>
-        <label className="field full"><span>Expiry date (optional)</span><input type="date" min={todayStr()} value={expiry} onChange={(e) => setExpiry(e.target.value)} /></label>
+        )}
       </div>
-      {error && <p className="error" role="alert">{error}</p>}
-      <button className="btn btn-block" disabled={busy || !ing || !(Number(qty) > 0)} onClick={submit}>{busy ? 'Saving…' : 'Receive into stock'}</button>
-    </div>
-  )
-}
-
-/** S12: นับจริงแล้วกรอก ระบบคำนวณผลต่างและสร้าง movement 'adjust' */
-function Count({ rows, emp, onDone }: { rows: IngredientRow[]; emp: number; onDone: (m: string) => void }) {
-  const [counted, setCounted] = useState<Record<number, string>>({})
-  const [reason, setReason] = useState<Record<number, string>>({})
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
-
-  const changed = rows.filter((r) => counted[r.ingredient_id] !== undefined && counted[r.ingredient_id] !== '' && Number(counted[r.ingredient_id]) !== Number(r.stock_qty))
-  const missingReason = changed.some((r) => !reason[r.ingredient_id]?.trim())
-
-  async function submit() {
-    setBusy(true)
-    setError('')
-    try {
-      const payload = rows
-        .filter((r) => counted[r.ingredient_id] !== undefined && counted[r.ingredient_id] !== '')
-        .map((r) => ({ ingredient_id: r.ingredient_id, counted_qty: Number(counted[r.ingredient_id]), reason: reason[r.ingredient_id] ?? '' }))
-      const n = await rpc<number>('count_stock', { p_emp: emp, p_counts: payload })
-      onDone(n === 0 ? 'Count matches the system – nothing to adjust' : `Adjusted ${n} item(s) and recorded in the audit log`)
-      setCounted({}); setReason({})
-    } catch (e) {
-      setError(errMsg(e))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <>
-      <div className="table-wrap">
-        <table className="tbl">
-          <thead><tr><th>Ingredient</th><th className="num">System</th><th style={{ width: 150 }}>Counted</th><th className="num">Difference</th><th>Reason (required if different)</th></tr></thead>
-          <tbody>
-            {rows.map((r) => {
-              const c = counted[r.ingredient_id]
-              const diff = c === undefined || c === '' ? null : Number(c) - Number(r.stock_qty)
-              return (
-                <tr key={r.ingredient_id}>
-                  <td>{r.name}</td>
-                  <td className="num">{fmtQty(r.stock_qty)} {r.unit}</td>
-                  <td><input className="input" inputMode="decimal" aria-label={`Counted ${r.name}`} value={c ?? ''} onChange={(e) => setCounted({ ...counted, [r.ingredient_id]: e.target.value })} /></td>
-                  <td className={'num ' + (diff === null || diff === 0 ? '' : 'diff-bad')}>{diff === null ? '–' : (diff > 0 ? '+' : '') + fmtQty(diff)}</td>
-                  <td>{diff !== null && diff !== 0 && <input className="input" aria-label={`Reason ${r.name}`} placeholder="e.g. spillage, miscount" value={reason[r.ingredient_id] ?? ''} onChange={(e) => setReason({ ...reason, [r.ingredient_id]: e.target.value })} />}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-      {error && <p className="error" role="alert" style={{ marginTop: 12 }}>{error}</p>}
-      <div style={{ marginTop: 16, maxWidth: 360 }}>
-        <button className="btn btn-block" disabled={busy || Object.values(counted).every((v) => v === '') || missingReason} onClick={submit}>
-          {busy ? 'Saving…' : `Confirm count${changed.length ? ` (${changed.length} to adjust)` : ''}`}
-        </button>
-      </div>
-    </>
-  )
-}
-
-function History({ rows, emp }: { rows: IngredientRow[]; emp: number }) {
-  const [ing, setIng] = useState('')
-  const [data, setData] = useState<MovementRow[]>([])
-  const [error, setError] = useState('')
-  useEffect(() => {
-    rpc<MovementRow[]>('get_stock_movements', { p_emp: emp, p_ingredient: ing ? Number(ing) : null, p_limit: 100 })
-      .then(setData)
-      .catch((e) => setError(errMsg(e)))
-  }, [emp, ing])
-  return (
-    <>
-      <div className="toolbar" style={{ marginBottom: 12 }}>
-        <select className="input-select" style={{ width: 240 }} value={ing} onChange={(e) => setIng(e.target.value)} aria-label="Filter ingredient">
-          <option value="">All ingredients</option>
-          {rows.map((r) => <option key={r.ingredient_id} value={r.ingredient_id}>{r.name}</option>)}
-        </select>
-      </div>
-      {error && <p className="error">{error}</p>}
-      <div className="table-wrap">
-        <table className="tbl">
-          <thead><tr><th>Time</th><th>Ingredient</th><th>Type</th><th className="num">Change</th><th>Reason</th><th>By</th></tr></thead>
-          <tbody>
-            {data.length === 0 && <tr><td colSpan={6} className="tbl-empty">No movements</td></tr>}
-            {data.map((m) => (
-              <tr key={m.movement_id}>
-                <td>{fmtDateTime(m.movement_date)}</td>
-                <td>{m.ingredient}</td>
-                <td><span className="badge">{MOVE_LABEL[m.movement_type]}</span></td>
-                <td className={'num ' + (m.quantity_change < 0 ? 'diff-bad' : 'diff-ok')}>{m.quantity_change > 0 ? '+' : ''}{fmtQty(m.quantity_change)} {m.unit}</td>
-                <td>{m.reason ?? '–'}</td>
-                <td>{m.employee}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
+    </Shell>
   )
 }

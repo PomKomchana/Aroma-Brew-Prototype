@@ -184,7 +184,7 @@ begin
     into v_sales, v_orders, v_disc
     from orders where status = 'paid' and order_date::date between p_from and p_to;
 
-  -- sale + return ของออเดอร์ในช่วงนี้ (บิลที่ยกเลิกหักล้างกันเอง)
+  -- sale + return movements of orders in this period (cancelled bills offset themselves)
   select coalesce(sum(-m.quantity_change * ingredient_unit_cost(m.ingredient_id)), 0) into v_cost
     from stock_movement m join orders o on o.order_id = m.reference_id
    where m.reference_type = 'order' and m.movement_type in ('sale','return')

@@ -5,7 +5,7 @@
   font-family: var(--font-body);
 }
 .cs main {
-  animation: fade-up var(--dur-slow) var(--ease-out) both;
+  animation: rise var(--dur-slow) var(--ease) both;
 }
 .cs a {
   color: inherit;
@@ -153,11 +153,11 @@
   font-weight: 600;
   letter-spacing: 0.05em;
   text-decoration: none;
-  transition: background-color var(--dur-fast) ease, transform var(--dur-fast) var(--ease-out);
+  transition: background-color var(--dur-fast) ease, transform var(--dur-fast) var(--ease);
 }
 .cs-btn:hover {
   background: var(--gold);
-  transform: translateY(-2px);
+  transform: translateY(var(--lift));
 }
 .cs-btn.ghost {
   background: transparent;
@@ -233,10 +233,10 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   text-decoration: none;
-  transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 a.cs-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   box-shadow: 0 16px 32px rgba(45, 31, 14, 0.12);
 }
 .cs-card-media {
@@ -284,7 +284,7 @@ a.cs-card:hover {
   background: var(--roast) center / cover;
   color: var(--cream);
   text-decoration: none;
-  transition: transform var(--dur) var(--ease-out);
+  transition: transform var(--dur) var(--ease);
 }
 .cs-tile::before {
   content: '';
@@ -293,7 +293,7 @@ a.cs-card:hover {
   background: linear-gradient(0deg, rgba(26, 18, 8, 0.85), rgba(26, 18, 8, 0.05) 60%);
 }
 .cs-tile:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 .cs-tile span {
   position: relative;
@@ -415,10 +415,10 @@ a.cs-card:hover {
   border: 1px solid var(--line);
   border-radius: 16px;
   text-decoration: none;
-  transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 .cs-pcard:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   box-shadow: 0 16px 32px rgba(45, 31, 14, 0.12);
 }
 .cs-pimg {
@@ -725,7 +725,7 @@ a.cs-card:hover {
   font-weight: 600;
   font-size: 16px;
   text-decoration: none;
-  transition: background-color var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) var(--ease);
 }
 .cs-auth-btn:hover:not(:disabled) {
   background: var(--gold);
@@ -1082,7 +1082,7 @@ a.cs-card:hover {
   position: fixed;
   left: 0;
   right: 0;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
 .cs-head.home.over {
   background: transparent;
@@ -1268,8 +1268,8 @@ a.cs-card:hover {
   min-width: 240px;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-8px);
-  transition: opacity 0.2s ease, transform 0.25s var(--ease-out), visibility 0s linear 0.25s;
+  transform: translateY(8px);
+  transition: opacity var(--dur-fast) var(--ease), transform var(--dur) var(--ease), visibility 0s linear var(--dur);
 }
 .cs-acct:hover .cs-acct-pop,
 .cs-acct:focus-within .cs-acct-pop {
@@ -1349,8 +1349,8 @@ a.cs-card:hover {
 .cs-pull-h,
 .cs-pull-card .cs-step {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.7s var(--ease-out), transform 0.85s var(--ease-out);
+  transform: translateY(var(--rise));
+  transition: opacity var(--dur-slow) var(--ease), transform var(--dur-slow) var(--ease);
 }
 .cs-pull.in .cs-pull-h,
 .cs-pull.in .cs-step {
@@ -1443,7 +1443,7 @@ a.cs-card:hover {
   border-right: 2px solid #9a5b0c;
   border-bottom: 2px solid #9a5b0c;
   transform: rotate(45deg);
-  transition: transform 0.2s ease;
+  transition: transform var(--dur-fast) var(--ease);
 }
 .cs-acc[open] summary::after {
   transform: rotate(-135deg);
@@ -1514,3 +1514,7 @@ a.cs-card:hover {
   .cs-acc summary { min-height: 52px; font-size: 1rem; }
   .cs-menu-h1 { margin-bottom: 32px; }
 }
+
+/* Language switch in the customer header */
+.cs-bar .cs-lang { margin-left: 6px; }
+@media (max-width: 820px) { .cs-bar .cs-lang { margin-left: 4px; } .cs-burger { margin-left: 0; } .cs-bar .cs-lang { height: 32px; } .cs-bar .cs-lang button { min-width: 36px; padding: 0 8px; } }

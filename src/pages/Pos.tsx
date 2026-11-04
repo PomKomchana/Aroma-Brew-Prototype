@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Icon } from '../components/Icon'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { loadMenu } from '../lib/menu'
@@ -25,7 +26,7 @@ import { HoverCard, type HoverState } from '../components/ProductInfo'
 
 const METHODS = Object.keys(PAYMENT_LABEL) as PaymentMethod[]
 
-/** [S03 POS หลัก] + [S05 ค้นหาสมาชิก] + [S06 ชำระเงิน] */
+/** [S03 Main POS] + [S05 Member lookup] + [S06 Payment] */
 export default function Pos() {
   const { employee, shiftId } = useAuth()
 
@@ -115,7 +116,7 @@ export default function Pos() {
       return
     }
     if (!navigator.onLine) {
-      // ออฟไลน์: ตรวจสมาชิกไม่ได้ เก็บเบอร์ไว้ก่อน ระบบจะตรวจและให้แต้มตอนซิงค์ (ไม่พบเบอร์ = ขายต่อโดยไม่ให้แต้ม)
+      // Offline: the member cannot be verified, so keep the number. It is checked and points are awarded on sync (number not found = sale stands, no points)
       setMember({ phone_number: phone, masked_phone: `${phone.slice(0, 2)}x-xxx-${phone.slice(-4)}`, name: 'Member (verify when online)', points: 0, tier: '' })
       return
     }
@@ -125,7 +126,7 @@ export default function Pos() {
     else setMember(data as Member)
   }
 
-  /** ขายตอนออฟไลน์: เก็บบิลลงเครื่อง (queue) แล้วออกใบเสร็จชั่วคราว */
+  /** Offline sale: store the bill on the device (queue) and issue a temporary receipt */
   function saveOffline() {
   if (!employee || !shiftId || !method) return
    try {
@@ -167,7 +168,7 @@ export default function Pos() {
     })
     setBusy(false)
     if (error) {
-      // error ที่ไม่มี code = เครือข่ายหลุดระหว่างส่ง -> ขายต่อแบบออฟไลน์ (ถ้าฐานข้อมูลปฏิเสธจริงจะมี code เช่น stock ไม่พอ)
+      // An error without a code = the network dropped while sending -> continue as an offline sale (a real database rejection has a code, e.g. not enough stock)
       if (!error.code && method === 'cash') return saveOffline()
       setPayError(friendlyError(error.message))
       return
@@ -210,7 +211,7 @@ export default function Pos() {
   return (
     <Shell>
       <div className="pos">
-        {/* Left Side: เมนู */}
+        {/* Left side: menu */}
         <div className="pos-left">
           <div className="tabs" role="tablist">
             {categories.map((c) => (
@@ -235,7 +236,7 @@ export default function Pos() {
                   onPointerLeave={() => setHover(null)}
                   onBlur={() => setHover(null)}
               >
-                <div className="menu-img">{p.image ? <img src={p.image} alt="" /> : '☕'}</div>
+                <div className="menu-img">{p.image ? <img src={p.image} alt="" /> : <Icon name="pos" size={34} />}</div>
                 <span className="menu-name">{p.name}</span>
                 <span className="menu-price">{money(Number(p.price))}</span>
               </button>
@@ -243,7 +244,7 @@ export default function Pos() {
           </div>
         </div>
 
-        {/* Right Side: ตะกร้า */}
+        {/* Right side: cart */}
         <aside className="cart">
           <div className="cart-head">Order List</div>
           <div className="cart-items">
@@ -259,9 +260,9 @@ export default function Pos() {
                   <p className="line-price">{money(l.unitPrice * l.qty)}</p>
                 </div>
                 <div className="qty">
-                  <button aria-label="ลดจำนวน" onClick={() => changeQty(l.key, -1)}>−</button>
+                  <button aria-label="Decrease quantity" onClick={() => changeQty(l.key, -1)}>−</button>
                   <span>{l.qty}</span>
-                  <button className="plus" aria-label="เพิ่มจำนวน" onClick={() => changeQty(l.key, 1)}>+</button>
+                  <button className="plus" aria-label="Increase quantity" onClick={() => changeQty(l.key, 1)}>+</button>
                 </div>
               </div>
             ))}
@@ -285,7 +286,7 @@ export default function Pos() {
                     setPhone('')
                   }}
                 >
-                  ✕
+                  <Icon name="x" size={16} />
                 </button>
               </div>
             ) : (
@@ -323,7 +324,7 @@ export default function Pos() {
                 style={{ width: '100%', marginTop: 8 }}
                 type="number"
                 inputMode="decimal"
-                placeholder="รับเงินมา..."
+                placeholder="Amount received..."
                 value={cashInput}
                 onChange={(e) => setCashInput(e.target.value)}
               />

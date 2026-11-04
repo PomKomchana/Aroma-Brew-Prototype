@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { LangSwitch } from '../i18n/lang'
+import { Icon } from '../components/Icon'
 import { Link } from 'react-router-dom'
 import { errMsg, fmtDateTime, rpc } from '../lib/api'
 import { money } from '../lib/pos'
@@ -13,7 +15,7 @@ interface Summary {
 
 type Step = 'phone' | 'otp' | 'summary'
 
-/** [S18 เว็บตรวจแต้ม] เบอร์โทร + OTP -> แต้มและประวัติการซื้อ (อ่านอย่างเดียว) */
+/** [S18 Points checker] Phone number + OTP -> points balance and purchase history (read-only) */
 export default function Member() {
   const [step, setStep] = useState<Step>('phone')
   const [phone, setPhone] = useState('')
@@ -60,6 +62,7 @@ export default function Member() {
 
   return (
     <div className="login-wrap">
+      <LangSwitch tone="dark" className="lang-login" />
       <div className="login-inner" style={{ maxWidth: step === 'summary' ? 480 : 384 }}>
         <div className="login-head">
           <p className="login-kicker">Member Portal</p>
@@ -84,7 +87,7 @@ export default function Member() {
             <form onSubmit={(e) => { e.preventDefault(); verify() }}>
               <h2>Enter the code</h2>
               <p className="member-note" style={{ marginTop: -12 }}>Sent to {phone.slice(0, 2)}x-xxx-{phone.slice(-4)} · valid for 5 minutes</p>
-              {/* DEMO ONLY: ของจริงต้องส่ง SMS/LINE และลบกล่องนี้ */}
+              {/* DEMO ONLY: in production, send the code by SMS/LINE and remove this box */}
               <p className="demo-otp">Demo code: <b>{demoCode}</b></p>
               <label className="dark-field">
                 <span>6-digit code</span>
@@ -124,7 +127,7 @@ export default function Member() {
             </>
           )}
         </div>
-        {step !== 'summary' && <p className="member-back"><Link to="/login">← Staff log in</Link></p>}
+        {step !== 'summary' && <p className="member-back"><Link to="/login"><Icon name="back" size={14} className="ico-inline" />Staff log in</Link></p>}
       </div>
     </div>
   )

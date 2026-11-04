@@ -224,7 +224,7 @@ create table work_schedule (
   end_time    time not null
 );
 
--- index ที่ใช้บ่อย
+-- Frequently used indexes
 create index on orders (shift_id);
 create index on orders (order_date);
 create index on stock_movement (ingredient_id, movement_date);

@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Shell } from '../components/Shell'
 
-/** [S02 เปิดกะ] */
+/** [S02 Open shift] */
 export default function OpenShift() {
   const { employee, shiftId, openShift } = useAuth()
   const nav = useNavigate()

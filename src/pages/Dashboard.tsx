@@ -12,7 +12,7 @@ const RANGES = [
   { label: '30 days', days: 29 },
 ]
 
-/** [S13 Dashboard] ยอดขาย ต้นทุน กำไร มูลค่าวัตถุดิบ สินค้าขายดี */
+/** [S13 Dashboard] Sales, cost, profit, stock value and best sellers */
 export default function Dashboard() {
   const { employee } = useAuth()
   const [days, setDays] = useState(6)
@@ -47,7 +47,7 @@ export default function Dashboard() {
               <div className="kpi"><p>SALES</p><b>{money(Number(d.sales))}</b><small>{d.orders} orders</small></div>
               <div className="kpi"><p>COST (INGREDIENTS)</p><b>{money(Math.round(Number(d.cost)))}</b><small>from recipes × unit cost</small></div>
               <div className="kpi accent"><p>GROSS PROFIT</p><b>{money(Math.round(Number(d.profit)))}</b><small>{margin}% margin</small></div>
-              <div className="kpi"><p>STOCK VALUE</p><b>{money(Math.round(Number(d.stock_value)))}</b><small>{d.low_stock > 0 ? `⚠ ${d.low_stock} below reorder point` : 'All above reorder point'}</small></div>
+              <div className="kpi"><p>STOCK VALUE</p><b>{money(Math.round(Number(d.stock_value)))}</b><small>{d.low_stock > 0 ? `${d.low_stock} below reorder point` : 'All above reorder point'}</small></div>
             </div>
             <div className="dash-grid">
               <div className="card">

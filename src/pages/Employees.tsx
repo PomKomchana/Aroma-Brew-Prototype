@@ -7,7 +7,7 @@ import type { EmployeeRow, Role } from '../lib/types'
 const ROLES: Role[] = ['owner', 'cashier', 'stock']
 type Draft = { employee_id: number | null; name: string; role: Role; status: 'active' | 'inactive'; password: string }
 
-/** [S15 พนักงาน] */
+/** [S15 Employees] */
 export default function Employees() {
   const { employee } = useAuth()
   const emp = employee!.employee_id

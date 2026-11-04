@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { LangSwitch } from '../i18n/lang'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import './customer.css'
 import { useBasket } from './basketContext'
@@ -93,6 +94,7 @@ export default function CustomerLayout() {
               </div>
             )}
           </div>
+          <LangSwitch tone="dark" className="cs-lang" />
           <button className="cs-burger" aria-label="Open navigation" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? '✕' : '☰'}</button>
           </>}
         </div>

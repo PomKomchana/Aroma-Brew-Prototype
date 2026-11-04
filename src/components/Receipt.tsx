@@ -1,11 +1,12 @@
 import { PAYMENT_LABEL, SIZE_LABEL, money, type ReceiptData } from '../lib/pos'
+import { Icon } from './Icon'
 
-/** [S07 ใบเสร็จ] */
+/** [S07 Receipt] */
 export default function Receipt({ data, onNext }: { data: ReceiptData; onNext: () => void }) {
   return (
     <div className="center-page">
       <div className="done">
-        <div className="done-tick no-print">✓</div>
+        <div className="done-tick no-print"><Icon name="check" size={28} /></div>
         <h2 className="no-print">Payment Successful</h2>
         {data.pending && (
           <p className="pts no-print" style={{ color: 'var(--amber)' }}>
@@ -23,7 +24,7 @@ export default function Receipt({ data, onNext }: { data: ReceiptData; onNext: (
             <b>Aroma Brew</b>
              <span>{data.pending ? `Bill ${data.orderId}` : `Bill #${data.orderId}`}</span>
           </div>
-          <div className="small">{data.time.toLocaleString('th-TH')}</div>
+          <div className="small">{data.time.toLocaleString('en-GB')}</div>
           <hr />
           {data.lines.map((l) => (
             <div key={l.key} style={{ marginBottom: 6 }}>

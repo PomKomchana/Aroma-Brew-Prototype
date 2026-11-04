@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Icon } from '../components/Icon'
 import { useAuth } from '../auth/AuthContext'
 import { Shell } from '../components/Shell'
 import { errMsg, rpc } from '../lib/api'
@@ -7,7 +8,7 @@ import type { AdminProduct, IngredientRow, RecipeRow } from '../lib/types'
 
 const EMPTY: AdminProduct = { product_id: 0, name: '', category: 'coffee', price: 0, image: '', is_active: true, description: '', allergens: [], recipes: [] }
 
-/** [S14 สินค้า/สูตร] */
+/** [S14 Products and recipes] */
 export default function Products() {
   const { employee } = useAuth()
   const emp = employee!.employee_id
@@ -132,7 +133,7 @@ function ProductDialog({ init, ings, emp, onClose, onSaved }: { init: AdminProdu
                 {ings.map((x) => <option key={x.ingredient_id} value={x.ingredient_id}>{x.name}</option>)}
               </select>
               <input className="input" aria-label={`Quantity ${unit}`} placeholder={unit || 'qty'} inputMode="decimal" value={r.qty_per_serve || ''} onChange={(e) => setRecipe(i, { qty_per_serve: e.target.value as unknown as number })} />
-              <button className="link-btn danger" aria-label="Remove line" onClick={() => setP({ ...p, recipes: p.recipes.filter((_, k) => k !== i) })}>✕</button>
+              <button className="link-btn danger" aria-label="Remove line" onClick={() => setP({ ...p, recipes: p.recipes.filter((_, k) => k !== i) })}><Icon name="x" size={15} /></button>
             </div>
           )
         })}

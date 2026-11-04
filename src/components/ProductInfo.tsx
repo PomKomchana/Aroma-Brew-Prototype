@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import { Icon } from './Icon'
 import { ALLERGEN_LABEL, CATEGORY_LABEL, money } from '../lib/pos'
 import type { Product } from '../lib/types'
 
@@ -12,7 +13,7 @@ export function ProductInfo({ product, ingredients }: { product: Product; ingred
       <p className="sec-label">Allergens</p>
       {allergens.length ? (
         <div className="allergens">
-          {allergens.map((a) => <span key={a} className="allergen">⚠ {ALLERGEN_LABEL[a] ?? a}</span>)}
+          {allergens.map((a) => <span key={a} className="allergen"><Icon name="alert" size={13} className="ico-inline" />{ALLERGEN_LABEL[a] ?? a}</span>)}
         </div>
       ) : (
         <p className="pinfo-text muted">No known allergens listed</p>

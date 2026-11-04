@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import type { Modifier, Product, Promotion } from './types'
 
-/** ข้อมูลที่ POS ต้องใช้ขายของ เก็บสำเนาไว้ในเครื่องเพื่อใช้ตอนออฟไลน์ [NFR-04] */
+/** Data the POS needs to sell. A copy is kept on the device for offline use [NFR-04] */
 export interface MenuData {
   products: Product[]
   modifiers: Modifier[]
@@ -61,8 +61,8 @@ async function fetchMenu(): Promise<MenuData> {
 }
 
 /**
- * โหลดเมนู: ออนไลน์ -> ดึงจาก Supabase แล้วอัปเดตสำเนาในเครื่อง
- *            ออฟไลน์/ดึงไม่ได้ -> ใช้สำเนาล่าสุด (ถ้าไม่เคยโหลดเลยจะ throw)
+ * Loads the menu: online -> fetch from Supabase and refresh the local copy
+ *             offline / fetch failed -> use the latest local copy (throws if it was never loaded)
  */
 export async function loadMenu(): Promise<MenuResult> {
   if (navigator.onLine) {
@@ -71,7 +71,7 @@ export async function loadMenu(): Promise<MenuResult> {
       try {
         localStorage.setItem(KEY, JSON.stringify({ data, cachedAt: new Date().toISOString() }))
       } catch {
-        /* เต็ม/ปิดใช้ localStorage: ใช้งานออนไลน์ต่อได้ แค่ไม่มีสำเนา */
+        /* localStorage is full or disabled: online use still works, there is just no local copy */
       }
       return { data, fromCache: false, cachedAt: null }
     } catch (e) {

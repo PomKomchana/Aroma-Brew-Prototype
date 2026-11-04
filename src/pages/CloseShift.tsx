@@ -7,7 +7,7 @@ import type { CloseResult, ShiftSummary } from '../lib/types'
 import { Shell } from '../components/Shell'
 import { useOnline, useQueue } from '../lib/offlineQueue'
 
-/** [S09 ปิดกะ (นับเงินสด)] -> แสดงผลต่าง -> [กลับ S01] */
+/** [S09 Close shift (count cash)] -> show the difference -> [back to S01] */
 export default function CloseShift() {
   const { shiftId, setShiftId, logout } = useAuth()
   const nav = useNavigate()
@@ -18,7 +18,7 @@ export default function CloseShift() {
   const [result, setResult] = useState<CloseResult | null>(null)
   const online = useOnline()
   const queue = useQueue()
-  const blocked = !online || queue.length > 0 // ต้องซิงค์บิล offline ให้ครบก่อน ยอดปิดกะจึงจะถูก
+  const blocked = !online || queue.length > 0 // Offline bills must be synced first, otherwise the closing totals would be wrong
 
   useEffect(() => {
     if (!shiftId) return
@@ -26,7 +26,7 @@ export default function CloseShift() {
       if (error) setError(error.message)
       else setSummary(data as ShiftSummary)
     })
-  }, [shiftId, queue.length]) // โหลดสรุปใหม่เมื่อซิงค์บิลเสร็จ
+  }, [shiftId, queue.length]) // reload the summary once the offline bills have synced
 
   const cashSales = Number(summary?.by_method.cash ?? 0)
   const expected = Number(summary?.opening_cash ?? 0) + cashSales

@@ -48,7 +48,7 @@ function periodRange(mode: Mode, day: string, month: string, year: number, from:
   return { from, to, group: days === 0 ? 'hour' : days <= 92 ? 'day' : 'month', label: from === to ? fmtDate(from) : `${fmtDate(from)} – ${fmtDate(to)}` }
 }
 
-/** ยอดขายตามโหมด วัน / เดือน / ปี หรือเลือกช่วงเวลาเอง */
+/** Sales by mode: day / month / year, or a custom date range */
 function SalesSummary({ emp }: { emp: number }) {
   const thisYear = new Date().getFullYear()
   const [mode, setMode] = useState<Mode>('month')
@@ -120,7 +120,7 @@ function SalesSummary({ emp }: { emp: number }) {
           {mode === 'custom' && (
             <>
               <input className="input" type="date" aria-label="From" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
-              <span className="muted">→</span>
+              <span className="muted">–</span>
               <input className="input" type="date" aria-label="To" value={to} min={from} max={today} onChange={(e) => setTo(e.target.value)} />
             </>
           )}
@@ -179,7 +179,7 @@ function SalesSummary({ emp }: { emp: number }) {
   )
 }
 
-/** [S17 รายงาน / Audit Log] */
+/** [S17 Reports / Audit log] */
 export default function Reports() {
   const { employee } = useAuth()
   const emp = employee!.employee_id
@@ -219,7 +219,7 @@ export default function Reports() {
           {tab === 'sales' && (
             <div className="toolbar">
               <input className="input" type="date" aria-label="From" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
-              <span className="muted">→</span>
+              <span className="muted">–</span>
               <input className="input" type="date" aria-label="To" value={to} min={from} max={todayStr()} onChange={(e) => setTo(e.target.value)} />
               <button className="mini-btn" onClick={exportCsv} disabled={orders.length === 0}>Export CSV</button>
             </div>

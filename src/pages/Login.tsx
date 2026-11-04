@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { LangSwitch } from '../i18n/lang'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { HOME_BY_ROLE } from '../lib/types'
@@ -10,7 +11,7 @@ const DEMO = [
   { label: 'Stock Clerk', code: '3', pw: 'stock1234' },
 ]
 
-/** [S01 ระบบล็อคอิน] */
+/** [S01 Staff login] */
 export default function Login() {
   const { employee, login } = useAuth()
   const nav = useNavigate()
@@ -42,6 +43,7 @@ export default function Login() {
 
   return (
     <div className="login-wrap">
+      <LangSwitch tone="dark" className="lang-login" />
       <div className="login-inner">
         <div className="login-head">
           <p className="login-kicker">Staff Management System</p>

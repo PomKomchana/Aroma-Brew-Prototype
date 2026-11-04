@@ -1,5 +1,5 @@
-// Service worker: เก็บ "เปลือกแอป" (index.html + ไฟล์ JS/CSS) ไว้ เพื่อให้เปิด/รีเฟรชหน้า POS ตอนออฟไลน์ได้ [NFR-04]
-// ไม่แตะคำขอไป Supabase (คนละ origin) ข้อมูลเมนูใช้สำเนาใน localStorage (src/lib/menu.ts)
+// Service worker: caches the "app shell" (index.html + JS/CSS files) so the POS page can open and refresh while offline [NFR-04]
+// Requests to Supabase (a different origin) are left alone. Menu data uses the copy in localStorage (src/lib/menu.ts)
 const CACHE = 'aroma-brew-shell-v1'
 
 self.addEventListener('install', (e) => {
@@ -19,7 +19,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url)
   if (req.method !== 'GET' || url.origin !== self.location.origin) return
 
-  // เปิดหน้าเว็บ: ลองเครือข่ายก่อน (ได้เวอร์ชันใหม่) ถ้าไม่ได้ใช้ index.html ที่เก็บไว้
+  // Page navigation: try the network first (gets the newest version), fall back to the cached index.html
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req)
@@ -33,7 +33,7 @@ self.addEventListener('fetch', (e) => {
     return
   }
 
-  // ไฟล์ asset (ชื่อมี hash ไม่เปลี่ยนเนื้อหา): ใช้ของที่เก็บไว้ก่อน
+  // Hashed asset files (content never changes for a given name): serve from cache first
   e.respondWith(
     caches.match(req).then(
       (hit) =>

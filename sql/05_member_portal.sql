@@ -47,7 +47,7 @@ begin
   if o.attempts >= 5 then raise exception 'Too many attempts, please request a new code'; end if;
 
   if o.code_hash <> crypt(p_code, o.code_hash) then
-    -- ห้าม raise ตรงนี้: exception จะ rollback การนับ attempts ทิ้ง จึงคืน null แทน
+    -- Do not raise here: the exception would roll back the attempts counter, so return null instead
     update member_otp set attempts = attempts + 1 where phone_number = p_phone;
     return null;
   end if;

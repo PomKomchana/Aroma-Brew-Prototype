@@ -1,6 +1,6 @@
 import type { Member, Modifier, Product, Promotion } from './types'
 
-export const POINT_RATE = 50 // 50 บาท = 1 แต้ม [FR-12] ต้องตรงกับฟังก์ชัน checkout ในฐานข้อมูล
+export const POINT_RATE = 50 // 50 baht = 1 point [FR-12]. Must match the checkout function in the database
 
 export const CATEGORY_LABEL: Record<string, string> = {
   coffee: 'Coffee',
@@ -13,7 +13,7 @@ export const MODIFIER_GROUP_LABEL: Record<string, string> = {
   milk: 'milk type',
   extra: 'extra',
 }
-/** กลุ่มที่เลือกได้อย่างเดียว */
+/** Modifier groups where only one option can be chosen */
 export const SINGLE_GROUPS = ['sweet', 'milk']
 
 const DRINK_GROUPS = ['sweet', 'milk', 'extra']
@@ -42,7 +42,7 @@ const ALLERGEN_RULES: [string, RegExp, RegExp][] = [
   ['sesame', /\b(sesame|tahini)(?:s|es)?\b/, /งา/],
 ]
 
-/** เดาสารก่อภูมิแพ้จากข้อความ (ชื่อ/คำอธิบาย/วัตถุดิบ) เป็นแค่คำแนะนำ Owner ต้องตรวจเอง */
+/** Guesses allergens from text (name / description / ingredients). This is only a suggestion; the owner must verify it. Each rule has an English and a Thai pattern. */
 export function detectAllergens(texts: string[]): string[] {
   const t = texts
     .join(' ')
@@ -65,7 +65,7 @@ export interface CartLine {
 }
 
 export interface ReceiptData {
-  orderId: number | string // offline = 'OFF-0001' จนกว่าจะซิงค์
+  orderId: number | string // offline bills use 'OFF-0001' until they are synced
   pending?: boolean
   lines: CartLine[]
   subtotal: number
@@ -99,7 +99,7 @@ export function discountOf(subtotal: number, promo: Promotion): number {
   return Math.min(Math.round(raw * 100) / 100, subtotal)
 }
 
-/** เลือกโปรโมชันที่ลดได้มากที่สุดในวันนี้ [ส่วนลดอัตโนมัติ S06] */
+/** Picks the promotion that gives the biggest discount today [automatic discount, S06] */
 export function bestPromotion(
   promos: Promotion[],
   subtotal: number,
@@ -117,6 +117,6 @@ export function bestPromotion(
 }
 
 export function friendlyError(message: string): string {
-  if (message.includes('ingredient_stock_qty_check')) return 'วัตถุดิบในสต็อกไม่พอสำหรับออเดอร์นี้'
+  if (message.includes('ingredient_stock_qty_check')) return 'Not enough ingredient stock for this order'
   return message
 }

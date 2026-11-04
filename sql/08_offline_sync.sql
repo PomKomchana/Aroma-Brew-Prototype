@@ -78,7 +78,7 @@ begin
     if v_qty is null or v_qty <= 0 then raise exception 'Invalid quantity'; end if;
 
     select * into v_prod from product where product_id = (v_item->>'product_id')::int;
-    if not found then raise exception 'Product not found'; end if;   -- สินค้าปิดขายแล้วก็ยังรับ เพราะขายไปก่อนหน้า
+    if not found then raise exception 'Product not found'; end if;   -- Still accepted if the product was deactivated, because it was sold earlier
 
     insert into order_detail (order_id, product_id, size, quantity, price)
     values (v_order_id, v_prod.product_id, v_size, v_qty, v_prod.price)
@@ -154,4 +154,3 @@ update supplier_ingredient si
          else si.unit_price end
   from ingredient i
  where i.ingredient_id = si.ingredient_id and si.unit_price = 20 and i.name not ilike '%croissant%';
- 

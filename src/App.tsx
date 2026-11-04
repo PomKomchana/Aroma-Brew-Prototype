@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { LangProvider } from './i18n/lang'
 import { AuthProvider } from './auth/AuthContext'
 import { RequireRole } from './auth/RequireRole'
 import Login from './pages/Login'
@@ -39,6 +40,7 @@ function SyncRunner() {
 
 export default function App() {
   return (
+    <LangProvider>
     <AuthProvider>
       <MemberProvider>
       <BasketProvider>
@@ -60,7 +62,7 @@ export default function App() {
           <Route path="/promotions" element={<RequireRole roles={['owner']}><Promotions /></RequireRole>} />
           <Route path="/reports" element={<RequireRole roles={['owner']}><Reports /></RequireRole>} />
           <Route path="/member" element={<Member />} />
-          {/* เว็บฝั่งลูกค้า (สไตล์/ฟังก์ชันอ้างอิง Pret) */}
+          {/* Customer-facing website (style and features modelled on Pret) */}
           <Route element={<CustomerLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/menu" element={<MenuPage />} />
@@ -79,5 +81,6 @@ export default function App() {
       </BasketProvider>
       </MemberProvider>
     </AuthProvider>
+    </LangProvider>
   )
 }

@@ -12,7 +12,7 @@ interface Props {
   onAdd: (size: string, selected: Modifier[]) => void
 }
 
-/** [S04 เลือกขนาดและ Modifier (ราคารวมอัปเดตสด)] */
+/** [S04 Choose size and modifiers] The total price updates live. */
 export default function ProductModal({ product, sizes, modifiers, ingredients, onClose, onAdd }: Props) {
   const drink = isDrink(product.category)
   const sizeOptions = drink ? sizes : []

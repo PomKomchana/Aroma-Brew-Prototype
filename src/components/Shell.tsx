@@ -3,36 +3,38 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { ROLE_LABEL, type Role } from '../lib/types'
 import { useOnline, useQueue, useSyncing } from '../lib/offlineQueue'
+import { Icon, type IconName } from './Icon'
+import { LangSwitch } from '../i18n/lang'
 import SyncPanel from './SyncPanel'
 import { useStockAlerts } from '../lib/stockAlerts'
 import { usePreorderCounts } from '../lib/preorders'
 
-const NAV: Record<Role, { to: string; icon: string; label: string }[]> = {
+const NAV: Record<Role, { to: string; icon: IconName; label: string }[]> = {
   cashier: [
-    { to: '/pos', icon: '☕', label: 'POS' },
-    { to: '/preorders', icon: '🛍️', label: 'Pre-orders' },
-    { to: '/orders', icon: '🧾', label: 'Orders' },
-    { to: '/close-shift', icon: '🔓', label: 'Close Shift' },
+    { to: '/pos', icon: 'pos', label: 'POS' },
+    { to: '/preorders', icon: 'preorders', label: 'Pre-orders' },
+    { to: '/orders', icon: 'orders', label: 'Orders' },
+    { to: '/close-shift', icon: 'close', label: 'Close Shift' },
   ],
   owner: [
-    { to: '/dashboard', icon: '📊', label: 'Dashboard' },
-    { to: '/preorders', icon: '🛍️', label: 'Pre-orders' },
-    { to: '/products', icon: '🍰', label: 'Products & Recipes' },
-    { to: '/stock', icon: '📦', label: 'Inventory' },
-    { to: '/purchasing', icon: '📝', label: 'Purchase Orders' },
-    { to: '/suppliers', icon: '🚚', label: 'Suppliers' },
-    { to: '/promotions', icon: '🏷️', label: 'Promotions' },
-    { to: '/employees', icon: '👥', label: 'Employees' },
-    { to: '/reports', icon: '📑', label: 'Reports & Audit' },
+    { to: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
+    { to: '/preorders', icon: 'preorders', label: 'Pre-orders' },
+    { to: '/products', icon: 'products', label: 'Products & Recipes' },
+    { to: '/stock', icon: 'stock', label: 'Inventory' },
+    { to: '/purchasing', icon: 'purchasing', label: 'Purchase Orders' },
+    { to: '/suppliers', icon: 'suppliers', label: 'Suppliers' },
+    { to: '/promotions', icon: 'promotions', label: 'Promotions' },
+    { to: '/employees', icon: 'employees', label: 'Employees' },
+    { to: '/reports', icon: 'reports', label: 'Reports & Audit' },
   ],
   stock: [
-    { to: '/stock', icon: '📦', label: 'Inventory' },
-    { to: '/purchasing', icon: '📝', label: 'Purchase Orders' },
-    { to: '/suppliers', icon: '🚚', label: 'Suppliers' },
+    { to: '/stock', icon: 'stock', label: 'Inventory' },
+    { to: '/purchasing', icon: 'purchasing', label: 'Purchase Orders' },
+    { to: '/suppliers', icon: 'suppliers', label: 'Suppliers' },
   ],
 }
 
-/** สถานะออนไลน์/ออฟไลน์ที่มุมจอ + จำนวนบิลที่รอซิงค์ [NFR-04] */
+/** Online/offline indicator in the sidebar, plus the number of bills waiting to sync [NFR-04] */
 function Connection() {
   const online = useOnline()
   const queue = useQueue()
@@ -77,7 +79,7 @@ export function Shell({ children }: { children: ReactNode }) {
         <nav className="side-nav">
           {NAV[employee.role].map((n) => (
             <NavLink key={n.to} to={n.to} className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-              <span>{n.icon}</span>
+              <Icon name={n.icon} />
               <span className="t">{n.label}</span>
               {n.to === '/preorders' && pre && pre.placed > 0 && (
                 <span className="nav-badge" title={`${pre.placed} new pre-order(s)`} aria-label={`${pre.placed} new pre-orders`}>{pre.placed}</span>
@@ -96,11 +98,14 @@ export function Shell({ children }: { children: ReactNode }) {
               nav('/login', { replace: true })
             }}
           >
-            ← Logout
+            <Icon name="logout" size={16} /> Logout
           </button>
         </div>
       </aside>
-      <main className="main">{children}</main>
+      <main className="main">
+        <LangSwitch tone="light" className="lang-float" />
+        {children}
+      </main>
     </div>
   )
 }
