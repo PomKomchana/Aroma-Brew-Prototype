@@ -3,7 +3,7 @@ import { POINT_RATE } from '../lib/pos'
 
 const FAQ = [
   ['How do I earn points?', `Give your phone number to the cashier when you pay. You earn 1 point for every ฿${POINT_RATE} you spend.`],
-  ['How do I check my points?', 'Open Check my points, enter your phone number, then enter the 6-digit code we send. Only registered phone numbers can sign in.'],
+  ['How do I check my points?', 'Select Sign in, enter your phone number, then enter the 6-digit code we send. Only registered phone numbers can sign in. If yours is not registered yet, ask the cashier to set you up.'],
   ['What if a bill is cancelled?', 'The points earned from that bill are taken back automatically.'],
   ['Why do I need a code?', 'The code makes sure only you can see your points and purchase history.'],
 ]
@@ -16,7 +16,7 @@ export default function Rewards() {
         <div className="cs-wrap cs-hero-in">
           <p className="cs-kicker">Member rewards</p>
           <h1>Every ฿{POINT_RATE} earns a point</h1>
-          <div className="cs-actions"><Link className="cs-btn" to="/member">Check my points</Link></div>
+          <div className="cs-actions"><Link className="cs-btn" to="/signin">Check my points</Link></div>
         </div>
       </section>
       <div className="cs-wrap cs-page">

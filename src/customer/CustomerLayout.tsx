@@ -10,14 +10,15 @@ const LINKS = [
 ]
 const FONTS = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Outfit:wght@300;400;500;600&display=swap'
 
-/* Customer layout with sticky header, navigation, and three-column footer. */
+// Customer layout with sticky header, navigation, and three-column footer
 export default function CustomerLayout() {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
+  const minimal = pathname === '/signin'
 
   useEffect(() => { setOpen(false); window.scrollTo(0, 0) }, [pathname])
 
-/* Load Fraunces and Outfit fonts on customer pages only. */
+  // Load Fraunces and Outfit fonts on customer pages only
   useEffect(() => {
     if (document.getElementById('cs-fonts')) return
     const l = document.createElement('link')
@@ -28,21 +29,23 @@ export default function CustomerLayout() {
   return (
     <div className="cs">
       <a className="cs-skip" href="#main-content">Skip to content</a>
-      <header className="cs-head">
+      <header className={minimal ? 'cs-head min' : 'cs-head'}>
         <div className="cs-bar">
           <Link to="/" className="cs-logo">AROMA BREW</Link>
+          {!minimal && <>
           <nav className={open ? 'cs-nav open' : 'cs-nav'} aria-label="Main">
             {LINKS.map((l) => <NavLink key={l.to} to={l.to}>{l.label}</NavLink>)}
-            <Link className="cs-cta cs-cta-m" to="/member">Check my points</Link>
+            <Link className="cs-cta cs-cta-m" to="/signin">Sign in</Link>
           </nav>
-          <Link className="cs-cta cs-cta-d" to="/member">Check my points</Link>
+          <Link className="cs-cta cs-cta-d" to="/signin">Sign in</Link>
           <button className="cs-burger" aria-label="Open navigation" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? '✕' : '☰'}</button>
+          </>}
         </div>
       </header>
 
       <main id="main-content"><Outlet /></main>
 
-      <footer className="cs-foot">
+      {!minimal && <footer className="cs-foot">
         <div className="cs-wrap cs-foot-grid">
           <div>
             <p className="cs-logo">AROMA BREW</p>
@@ -57,7 +60,7 @@ export default function CustomerLayout() {
           <div>
             <h4>Rewards</h4>
             <Link to="/rewards">How points work</Link>
-            <Link to="/member">Check my points</Link>
+            <Link to="/signin">Check my points</Link>
           </div>
           <div>
             <h4>Team</h4>
@@ -65,7 +68,7 @@ export default function CustomerLayout() {
           </div>
         </div>
         <div className="cs-wrap cs-copy">© Aroma Brew · CPE230 course project</div>
-      </footer>
+      </footer>}
     </div>
   )
 }

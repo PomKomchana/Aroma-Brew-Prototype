@@ -22,7 +22,7 @@ export default function Home() {
           <h1>Sip. Earn.<br />Come back for more.</h1>
           <p className="cs-lead">Every {`฿${POINT_RATE}`} you spend earns 1 point. Share your phone number at the counter and check your points here anytime.</p>
           <div className="cs-actions">
-            <Link className="cs-btn" to="/member">Check my points</Link>
+            <Link className="cs-btn" to="/signin">Check my points</Link>
             <Link className="cs-btn ghost" to="/menu">View menu</Link>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function Home() {
             <h2 className="cs-h2">Already a member?</h2>
             <p>Enter your phone number, confirm with a 6-digit code, and see your points and purchase history.</p>
           </div>
-          <Link className="cs-btn" to="/member">Check my points</Link>
+          <Link className="cs-btn" to="/signin">Check my points</Link>
         </div>
       </section>
     </>
