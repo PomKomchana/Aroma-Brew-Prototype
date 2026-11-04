@@ -1518,3 +1518,31 @@ a.cs-card:hover {
 /* Language switch in the customer header */
 .cs-bar .cs-lang { margin-left: 6px; }
 @media (max-width: 820px) { .cs-bar .cs-lang { margin-left: 4px; } .cs-burger { margin-left: 0; } .cs-bar .cs-lang { height: 32px; } .cs-bar .cs-lang button { min-width: 36px; padding: 0 8px; } }
+
+/* ===== Find us: store locator (list + map), modelled on Pret ===== */
+.cs-find { display: grid; grid-template-columns: minmax(320px, 420px) 1fr; height: calc(100vh - 68px); min-height: 520px; background: #fff; border-top: 1px solid var(--line); }
+.cs-find-side { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); animation: rise var(--dur-slow) var(--ease) both; }
+.cs-find-search { display: flex; gap: 0; padding: 16px; border-bottom: 1px solid var(--line); }
+.cs-find-search input { flex: 1; min-width: 0; height: 48px; padding: 0 16px; border: 1px solid var(--line); border-right: 0; border-radius: 12px 0 0 12px; background: var(--paper); color: var(--roast); font-size: 15px; outline: none; transition: border-color var(--dur-fast) var(--ease); }
+.cs-find-search input:focus { border-color: var(--amber); }
+.cs-find-search button { height: 48px; padding: 0 22px; border: 0; border-radius: 0 12px 12px 0; background: var(--amber); color: var(--espresso); font-weight: 600; font-size: 14px; letter-spacing: 0.02em; }
+.cs-find-search button:hover { background: var(--gold); }
+.cs-find-count { padding: 12px 20px; font-size: 13px; color: var(--smoke); border-bottom: 1px solid var(--line); min-height: 42px; }
+.cs-find-list { flex: 1; overflow-y: auto; }
+.cs-find-msg { padding: 20px; margin: 0; }
+.cs-find-item { padding: 18px 20px 16px; border-bottom: 1px solid var(--line); border-left: 4px solid transparent; cursor: pointer; animation: rise var(--dur) var(--ease) both; transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
+.cs-find-item:hover { background: var(--paper); }
+.cs-find-item.on { background: var(--paper); border-left-color: var(--amber); }
+.cs-find-pick { display: block; width: 100%; padding: 0; border: 0; background: none; text-align: left; color: var(--roast); }
+.cs-find-pick h2 { margin: 0 0 4px; font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; }
+.cs-find-pick p { margin: 0; font-size: 15px; color: var(--smoke); }
+.cs-find-actions { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; }
+.cs-find-actions a { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: 14px; font-weight: 500; color: #9a5b0c; text-decoration: none; }
+.cs-find-actions a:hover { text-decoration: underline; }
+.cs-find-map { position: relative; min-height: 320px; background: var(--sand); }
+.cs-find-map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+@media (max-width: 820px) {
+  .cs-find { grid-template-columns: 1fr; height: auto; }
+  .cs-find-side { border-right: 0; max-height: 60vh; }
+  .cs-find-map { height: 55vh; }
+}

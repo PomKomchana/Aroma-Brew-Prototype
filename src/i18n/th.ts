@@ -655,3 +655,9 @@ PATTERNS.push(
 PATTERNS.push(
   [/^Collected(?: · you earned (\d+) points)?\. Enjoy!$/, (m) => `รับแล้ว${m[1] ? ` · คุณได้รับ ${m[1]} แต้ม` : ''} ขอให้อร่อยนะคะ!`],
 )
+
+Object.assign(TH, {
+  'Search locations': 'ค้นหาสาขา', 'Get directions': 'นำทาง', 'location': 'สาขา', 'locations': 'สาขา',
+  'No locations match your search.': 'ไม่พบสาขาที่ตรงกับการค้นหา',
+})
+PATTERNS.push([/^(\d+) locations?$/, (m) => `${m[1]} สาขา`])

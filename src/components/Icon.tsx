@@ -20,6 +20,8 @@ const P: Record<string, ReactNode> = {
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   back: <path d="M19 12H5m6-6-6 6 6 6" />,
   next: <path d="M5 12h14m-6-6 6 6-6 6" />,
+  phone: <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" />,
+  pin: <><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z" /><circle cx="12" cy="10" r="2.5" /></>,
   logout: <path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9" />,
 }
 export type IconName = keyof typeof P
