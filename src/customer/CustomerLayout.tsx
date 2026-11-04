@@ -122,7 +122,7 @@ export default function CustomerLayout() {
             <Link to="/login">Staff log in</Link>
           </div>
         </div>
-        <div className="cs-wrap cs-copy">© Aroma Brew · CPE230 course project</div>
+        <div className="cs-wrap cs-copy">© Aroma Brew Prototype · CPE230 course project</div>
       </footer>}
     </div>
   )

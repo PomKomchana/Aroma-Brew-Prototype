@@ -71,7 +71,7 @@ export default function Basket() {
 
   return (
     <div className="cs-wrap cs-page">
-      <p className="cs-kicker">Order ahead</p>
+      <p className="cs-kicker">Order now</p>
       <h1 className="cs-h1">Your order</h1>
       <div className="cs-order">
         <div>

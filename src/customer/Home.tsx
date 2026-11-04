@@ -45,7 +45,7 @@ export default function Home() {
           <h1>Sip. <span className="cs-gold">Earn.</span><br />Come back for more.</h1>
           <p className="cs-lead">Every {`฿${POINT_RATE}`} you spend earns 1 point. Share your phone number at the counter and check your points here anytime.</p>
           <div className="cs-actions">
-            <Link className="cs-btn" to="/menu">Order ahead</Link>
+            <Link className="cs-btn" to="/menu">Order now</Link>
             <Link className="cs-btn ghost" to="/signin">Check my points</Link>
           </div>
         </div>

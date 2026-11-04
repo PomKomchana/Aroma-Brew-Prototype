@@ -813,7 +813,7 @@ a.cs-card:hover {
   color: var(--smoke);
 }
 
-/* Order ahead: basket, pickup times, order status */
+/* Order now: basket, pickup times, order status */
 .cs-basket {
   display: inline-flex;
   align-items: center;
