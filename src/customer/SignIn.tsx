@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useMember } from './member'
 import { errMsg, fmtDateTime, rpc } from '../lib/api'
 import { POINT_RATE, money } from '../lib/pos'
 
@@ -19,11 +20,27 @@ export default function SignIn() {
   const [phone, setPhone] = useState('')
   const [code, setCode] = useState('')
   const [demoCode, setDemoCode] = useState('')
-  const [token, setToken] = useState('')
+  const { token, setToken, clear } = useMember()
+  const nav = useNavigate()
+  const [sp] = useSearchParams()
+  const next = sp.get('next')
+  const goNext = next && next.startsWith('/') && !next.startsWith('//') ? next : null
   const [data, setData] = useState<Summary | null>(null)
   const [error, setError] = useState('')
   const [notMember, setNotMember] = useState(false)
   const [busy, setBusy] = useState(false)
+
+  // already signed in on this tab: go straight to the account (or back to where they came from)
+  useEffect(() => {
+    if (!token) return
+    if (goNext) { nav(goNext, { replace: true }); return }
+    let on = true
+    rpc<Summary>('get_member_summary', { p_token: token })
+      .then((r) => { if (on) { setData(r); setStep('summary') } })
+      .catch(() => { if (on) clear() })
+    return () => { on = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function run(fn: () => Promise<void>) {
     setBusy(true); setError(''); setNotMember(false)
@@ -47,13 +64,14 @@ export default function SignIn() {
     const t = await rpc<string | null>('verify_otp', { p_phone: phone, p_code: code })
     if (!t) throw new Error('Incorrect code, please try again')
     setToken(t)
+    if (goNext) { nav(goNext, { replace: true }); return }
     setData(await rpc<Summary>('get_member_summary', { p_token: t }))
     setStep('summary')
   })
 
   async function signOut() {
     if (token) await rpc('member_logout', { p_token: token }).catch(() => {})
-    setToken(''); setData(null); setPhone(''); setCode(''); setDemoCode(''); setError(''); setNotMember(false); setStep('phone')
+    clear(); setData(null); setPhone(''); setCode(''); setDemoCode(''); setError(''); setNotMember(false); setStep('phone')
   }
 
   return (
@@ -123,7 +141,8 @@ export default function SignIn() {
               </div>
             </div>
           ))}
-          <button type="button" className="cs-auth-btn ghost" style={{ marginTop: 24 }} onClick={signOut}>Sign out</button>
+          <Link className="cs-auth-btn" style={{ marginTop: 24, width: '100%' }} to="/my-orders">My pre-orders</Link>
+          <button type="button" className="cs-auth-btn ghost" style={{ marginTop: 12, width: '100%' }} onClick={signOut}>Sign out</button>
         </>
       )}
     </div>

@@ -5,15 +5,18 @@ import { ROLE_LABEL, type Role } from '../lib/types'
 import { useOnline, useQueue, useSyncing } from '../lib/offlineQueue'
 import SyncPanel from './SyncPanel'
 import { useStockAlerts } from '../lib/stockAlerts'
+import { usePreorderCounts } from '../lib/preorders'
 
 const NAV: Record<Role, { to: string; icon: string; label: string }[]> = {
   cashier: [
     { to: '/pos', icon: '☕', label: 'POS' },
+    { to: '/preorders', icon: '🛍️', label: 'Pre-orders' },
     { to: '/orders', icon: '🧾', label: 'Orders' },
     { to: '/close-shift', icon: '🔓', label: 'Close Shift' },
   ],
   owner: [
     { to: '/dashboard', icon: '📊', label: 'Dashboard' },
+    { to: '/preorders', icon: '🛍️', label: 'Pre-orders' },
     { to: '/products', icon: '🍰', label: 'Products & Recipes' },
     { to: '/stock', icon: '📦', label: 'Inventory' },
     { to: '/purchasing', icon: '📝', label: 'Purchase Orders' },
@@ -56,6 +59,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const { employee, shiftId, logout } = useAuth()
   const nav = useNavigate()
   const alerts = useStockAlerts(employee?.employee_id ?? null, !!employee && employee.role !== 'cashier')
+  const pre = usePreorderCounts(employee?.employee_id ?? null, !!employee && employee.role !== 'stock')
   if (!employee) return null
   return (
     <div className="app">
@@ -75,6 +79,9 @@ export function Shell({ children }: { children: ReactNode }) {
             <NavLink key={n.to} to={n.to} className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
               <span>{n.icon}</span>
               <span className="t">{n.label}</span>
+              {n.to === '/preorders' && pre && pre.placed > 0 && (
+                <span className="nav-badge" title={`${pre.placed} new pre-order(s)`} aria-label={`${pre.placed} new pre-orders`}>{pre.placed}</span>
+              )}
               {n.to === '/stock' && alerts && alerts.count > 0 && (
                 <span className="nav-badge" title={`${alerts.count} ingredient(s) low, out of stock or expiring`} aria-label={`${alerts.count} stock alerts`}>{alerts.count}</span>
               )}

@@ -23,6 +23,13 @@ import ProductPage from './customer/ProductPage'
 import Rewards from './customer/Rewards'
 import Allergens from './customer/Allergens'
 import Stores from './customer/Stores'
+import SignIn from './customer/SignIn'
+import Basket from './customer/Basket'
+import MyOrders from './customer/MyOrders'
+import OrderStatus from './customer/OrderStatus'
+import Preorders from './pages/Preorders'
+import { MemberProvider } from './customer/member'
+import { BasketProvider } from './customer/basketContext'
 
 /** Automatically sync offline bills on every page */
 function SyncRunner() {
@@ -33,6 +40,8 @@ function SyncRunner() {
 export default function App() {
   return (
     <AuthProvider>
+      <MemberProvider>
+      <BasketProvider>
       <BrowserRouter>
         <SyncRunner />
         <Routes>
@@ -41,6 +50,7 @@ export default function App() {
           <Route path="/pos" element={<RequireRole roles={['cashier']}><Pos /></RequireRole>} />
           <Route path="/close-shift" element={<RequireRole roles={['cashier']}><CloseShift /></RequireRole>} />
           <Route path="/orders" element={<RequireRole roles={['cashier']}><Orders /></RequireRole>} />
+          <Route path="/preorders" element={<RequireRole roles={['cashier', 'owner']}><Preorders /></RequireRole>} />
           <Route path="/stock" element={<RequireRole roles={['stock', 'owner']}><Stock /></RequireRole>} />
           <Route path="/suppliers" element={<RequireRole roles={['stock', 'owner']}><Suppliers /></RequireRole>} />
           <Route path="/purchasing" element={<RequireRole roles={['stock', 'owner']}><PurchaseOrders /></RequireRole>} />
@@ -58,10 +68,16 @@ export default function App() {
             <Route path="/rewards" element={<Rewards />} />
             <Route path="/allergens" element={<Allergens />} />
             <Route path="/stores" element={<Stores />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/basket" element={<Basket />} />
+            <Route path="/my-orders" element={<MyOrders />} />
+            <Route path="/my-orders/:id" element={<OrderStatus />} />
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
+      </BasketProvider>
+      </MemberProvider>
     </AuthProvider>
   )
 }

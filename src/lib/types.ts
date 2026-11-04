@@ -246,3 +246,48 @@ export interface SalesReport {
   top_products: { name: string; qty: number; revenue: number }[]
   by_method: Partial<Record<'cash' | 'card' | 'promptpay', number>>
 }
+
+// Pre-order (order ahead, pick up in store)
+export type PreorderStatus = 'placed' | 'preparing' | 'ready' | 'collected' | 'cancelled' | 'no_show'
+export interface PreorderItem {
+  name: string
+  size: string
+  quantity: number
+  unit_price: number
+  modifiers: string[]
+}
+export interface Preorder {
+  preorder_id: number
+  status: PreorderStatus
+  pickup_time: string
+  created_at: string
+  ready_at: string | null
+  note: string | null
+  subtotal: number
+  discount_amount: number
+  total_price: number
+  promo_name: string | null
+  cancel_reason: string | null
+  order_id: number | null
+  points_earned: number
+  items: PreorderItem[]
+  can_cancel?: boolean
+  customer_name?: string
+  masked_phone?: string
+}
+export interface PickupSlots {
+  enabled: boolean
+  open_time: string
+  close_time: string
+  lead_minutes: number
+  slots: { time: string; available: boolean; remaining: number }[]
+}
+export interface PreorderSettings {
+  is_enabled: boolean
+  open_time: string
+  close_time: string
+  slot_minutes: number
+  min_lead_minutes: number
+  max_orders_per_slot: number
+  max_active_per_customer: number
+}

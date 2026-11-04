@@ -22,8 +22,22 @@ export default function Home() {
           <h1>Sip. Earn.<br />Come back for more.</h1>
           <p className="cs-lead">Every {`฿${POINT_RATE}`} you spend earns 1 point. Share your phone number at the counter and check your points here anytime.</p>
           <div className="cs-actions">
-            <Link className="cs-btn" to="/signin">Check my points</Link>
-            <Link className="cs-btn ghost" to="/menu">View menu</Link>
+            <Link className="cs-btn" to="/menu">Order ahead</Link>
+            <Link className="cs-btn ghost" to="/signin">Check my points</Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="cs-sec cs-sec-sand">
+        <div className="cs-wrap">
+          <p className="cs-kicker">Order ahead</p>
+          <h2 className="cs-h2">Skip the queue</h2>
+          <div className="cs-steps">
+            {[['1', 'Choose your order', 'Pick drinks and bakes from the menu and add them to your basket.'],
+              ['2', 'Pick a time', 'Choose a pickup time today and sign in with your phone number.'],
+              ['3', 'Collect and pay', 'Give your order number at the counter and pay when you collect.']].map(([n, t, d]) => (
+              <div className="cs-step" key={n}><i>{n}</i><h3>{t}</h3><p>{d}</p></div>
+            ))}
           </div>
         </div>
       </section>

@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useBasket } from './basketContext'
 import { ProductInfo } from '../components/ProductInfo'
-import { POINT_RATE, SIZE_LABEL, groupsFor, isDrink, money } from '../lib/pos'
+import { POINT_RATE, SIZE_LABEL, SINGLE_GROUPS, groupsFor, isDrink, money } from '../lib/pos'
 import ProductCard from './ProductCard'
 import { bigImg, catLabel, useMenu } from './useMenu'
 
@@ -9,6 +11,11 @@ const GROUP: Record<string, string> = { sweet: 'Sweetness', milk: 'Milk', extra:
 export default function ProductPage() {
   const { id } = useParams()
   const { data, error } = useMenu()
+  const { add } = useBasket()
+  const [size, setSize] = useState('')
+  const [mods, setMods] = useState<number[]>([])
+  const [qty, setQty] = useState(1)
+  const [added, setAdded] = useState(false)
   const p = data?.products.find((x) => String(x.product_id) === id)
 
   if (error) return <div className="cs-wrap cs-page"><p className="error">{error}</p></div>
@@ -25,6 +32,20 @@ export default function ProductPage() {
     .map((g) => ({ g, items: data.modifiers.filter((m) => m.type === g) }))
     .filter((x) => x.items.length)
   const sizes = isDrink(p.category) ? data.sizes[p.product_id] ?? [] : []
+  const curSize = size && sizes.includes(size) ? size : sizes.includes('M') ? 'M' : sizes[0] ?? 'M'
+  const unit = Number(p.price) + mods.reduce((t, id) => t + Number(data.modifiers.find((m) => m.modifier_id === id)?.extra_price ?? 0), 0)
+  function toggle(id: number, type: string) {
+    setAdded(false)
+    setMods((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id)
+      const same = SINGLE_GROUPS.includes(type) ? data!.modifiers.filter((m) => m.type === type).map((m) => m.modifier_id) : []
+      return [...prev.filter((x) => !same.includes(x)), id]
+    })
+  }
+  function addToBasket() {
+    add({ product_id: p!.product_id, size: curSize, modifier_ids: mods, qty })
+    setAdded(true)
+  }
   const related = data.products.filter((x) => x.category === p.category && x.product_id !== p.product_id).slice(0, 4)
 
   return (
@@ -41,23 +62,38 @@ export default function ProductPage() {
 
           {sizes.length > 0 && (
             <div className="cs-opt">
-              <p className="sec-label">Sizes</p>
-              <div className="cs-chips">{sizes.map((s) => <span key={s} className="cs-chip static">{SIZE_LABEL[s] ?? s}</span>)}</div>
+              <p className="sec-label">Size</p>
+              <div className="cs-chips">{sizes.map((x) => <button key={x} aria-pressed={curSize === x} className={curSize === x ? 'cs-chip pick on' : 'cs-chip pick'} onClick={() => setSize(x)}>{SIZE_LABEL[x] ?? x}</button>)}</div>
             </div>
           )}
           {groups.map(({ g, items }) => (
             <div className="cs-opt" key={g}>
               <p className="sec-label">{GROUP[g] ?? g}</p>
               <div className="cs-chips">
-                {items.map((m) => (
-                  <span key={m.modifier_id} className="cs-chip static">{m.name}{Number(m.extra_price) > 0 ? ` +${money(Number(m.extra_price))}` : ''}</span>
-                ))}
+                {items.map((m) => {
+                  const on = mods.includes(m.modifier_id)
+                  return (
+                    <button key={m.modifier_id} aria-pressed={on} className={on ? 'cs-chip pick on' : 'cs-chip pick'} onClick={() => toggle(m.modifier_id, m.type)}>
+                      {m.name}{Number(m.extra_price) > 0 ? ` +${money(Number(m.extra_price))}` : ''}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           ))}
 
+          <div className="cs-add">
+            <div className="cs-qty">
+              <button aria-label="Fewer" onClick={() => setQty(Math.max(1, qty - 1))}>−</button>
+              <span aria-live="polite">{qty}</span>
+              <button aria-label="More" onClick={() => setQty(Math.min(20, qty + 1))}>+</button>
+            </div>
+            <button className="cs-auth-btn" onClick={addToBasket}>Add to order · {money(unit * qty)}</button>
+            {added && <Link className="cs-more" to="/basket">Added. View basket →</Link>}
+          </div>
+
           <div className="cs-note">
-            Order at the counter and give your phone number to earn 1 point for every {`฿${POINT_RATE}`}.
+            Order ahead and pay at the counter when you pick up. Sign in to earn 1 point for every {`฿${POINT_RATE}`}.
             {' '}<Link to="/rewards">How points work</Link>
           </div>
         </div>

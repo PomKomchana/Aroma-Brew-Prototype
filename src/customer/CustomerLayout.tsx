@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import './customer.css'
+import { useBasket } from './basketContext'
+import { useMember } from './member'
 
 const LINKS = [
   { to: '/menu', label: 'Menu' },
@@ -14,6 +16,8 @@ const FONTS = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..14
 export default function CustomerLayout() {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
+  const { count } = useBasket()
+  const { token } = useMember()
   const minimal = pathname === '/signin'
 
   useEffect(() => { setOpen(false); window.scrollTo(0, 0) }, [pathname])
@@ -35,9 +39,11 @@ export default function CustomerLayout() {
           {!minimal && <>
           <nav className={open ? 'cs-nav open' : 'cs-nav'} aria-label="Main">
             {LINKS.map((l) => <NavLink key={l.to} to={l.to}>{l.label}</NavLink>)}
-            <Link className="cs-cta cs-cta-m" to="/signin">Sign in</Link>
+            {token && <NavLink to="/my-orders">My orders</NavLink>}
+            <Link className="cs-cta cs-cta-m" to="/signin">{token ? 'Account' : 'Sign in'}</Link>
           </nav>
-          <Link className="cs-cta cs-cta-d" to="/signin">Sign in</Link>
+          <Link className="cs-basket" to="/basket" aria-label={`Basket, ${count} items`}>Basket{count > 0 && <b>{count}</b>}</Link>
+          <Link className="cs-cta cs-cta-d" to="/signin">{token ? 'Account' : 'Sign in'}</Link>
           <button className="cs-burger" aria-label="Open navigation" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? '✕' : '☰'}</button>
           </>}
         </div>
