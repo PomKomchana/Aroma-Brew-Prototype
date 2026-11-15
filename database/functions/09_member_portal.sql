@@ -1,20 +1,7 @@
-create table if not exists member_otp (
-  phone_number varchar(10) primary key references customer,
-  code_hash    text not null,
-  expires_at   timestamp not null,
-  attempts     int not null default 0,
-  requested_at timestamp not null default now()
-);
+-- 09 customer site: sign-in, points, branches
+-- phone number -> OTP -> session token (valid 30 minutes).
 
-create table if not exists member_session (
-  token        uuid primary key default gen_random_uuid(),
-  phone_number varchar(10) not null references customer,
-  expires_at   timestamp not null
-);
-
-alter table member_otp enable row level security;
-alter table member_session enable row level security;
-
+-- DEMO ONLY: the code is returned to the screen. In production this must be sent by SMS/LINE
 create or replace function request_otp(p_phone varchar) returns jsonb
 language plpgsql security definer set search_path = public, extensions as $$
 declare v_code text; v_last timestamp;
@@ -38,6 +25,7 @@ begin
   return jsonb_build_object('demo_code', v_code, 'expires_in', 300);
 end $$;
 
+-- wrong code returns null (not an exception) so that the attempts counter is not rolled back; 5 attempts max
 create or replace function verify_otp(p_phone varchar, p_code varchar) returns uuid
 language plpgsql security definer set search_path = public, extensions as $$
 declare o member_otp%rowtype; v_token uuid;
@@ -84,4 +72,12 @@ end $$;
 create or replace function member_logout(p_token uuid) returns void
 language sql security definer set search_path = public as $$
   delete from member_session where token = p_token;
+$$;
+
+create or replace function get_branches() returns jsonb
+language sql security definer set search_path = public as $$
+  select coalesce(
+    jsonb_agg(jsonb_build_object('name', name, 'address', address, 'phone', phone_number) order by branch_id),
+    '[]'::jsonb)
+  from branch;
 $$;

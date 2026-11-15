@@ -1,14 +1,7 @@
--- 08: Offline mode (NFR-04)
-create table if not exists offline_order_log (
-  client_id   uuid primary key,
-  order_id    int not null references orders,
-  employee_id int not null references employee,
-  offline_at  timestamp not null,
-  synced_at   timestamp not null default now()
-);
-alter table offline_order_log enable row level security;
+-- 04 offline sales sync (NFR-04)
+-- When the shop has no internet the POS queues sales in the browser and sends them here later.
 
--- Deduct available stock only; return the shortage (0 = fully fulfilled)
+-- deducts only what is actually in stock and returns the shortage (0 = fully fulfilled)
 create or replace function take_stock_offline(
   p_branch int, p_ingredient int, p_need numeric, p_order int, p_emp int, p_at timestamp
 ) returns numeric
@@ -24,6 +17,7 @@ begin
   return p_need - v_take;
 end $$;
 
+-- same as checkout but uses the real sale time, never rejects a sale just because stock or a promotion changed, and is safe to retry (client_id)
 create or replace function sync_offline_order(
   p_employee_id    int,
   p_shift_id       int,
@@ -142,15 +136,3 @@ begin
   return jsonb_build_object('order_id', v_order_id, 'duplicate', false, 'member_skipped', v_member_skipped,
                             'stock_short', to_jsonb(v_shorts), 'total', v_total);
 end $$;
-
--- Fix seed supplier prices (file 04 bug: renamed ingredients caused mismatches, setting all prices to 20) Safe to rerun
-update supplier_ingredient si
-   set unit_price = case
-         when i.name ilike 'oat milk%'  then 0.09
-         when i.name ilike '%coffee%'   then 0.80
-         when i.name ilike '%matcha%'   then 2.50
-         when i.name ilike '%syrup%'    then 0.05
-         when i.name ilike '%milk%'     then 0.04
-         else si.unit_price end
-  from ingredient i
- where i.ingredient_id = si.ingredient_id and si.unit_price = 20 and i.name not ilike '%croissant%';

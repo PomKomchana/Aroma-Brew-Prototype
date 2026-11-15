@@ -1,0 +1,37 @@
+# Free Supabase projects are paused after about a week without database activity.
+# This calls one cheap function (get_branches) every day so the project counts as active.
+#
+# Setup: repo Settings -> Secrets and variables -> Actions -> New repository secret
+#   SUPABASE_URL        e.g. https://xxxxxxxx.supabase.co
+#   SUPABASE_ANON_KEY   the anon / publishable key (same one the web app uses)
+
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: '17 3 * * *'   # every day, 03:17 UTC (10:17 in Bangkok)
+  workflow_dispatch:        # lets you run it by hand from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call get_branches()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            echo "SUPABASE_URL / SUPABASE_ANON_KEY secrets are not set" >&2
+            exit 1
+          fi
+          # legacy anon keys are JWTs (eyJ...) and also go in Authorization;
+          # new sb_publishable_ keys go in the apikey header only
+          auth=()
+          case "$SUPABASE_ANON_KEY" in eyJ*) auth=(-H "Authorization: Bearer $SUPABASE_ANON_KEY");; esac
+          curl --fail --silent --show-error --max-time 30 \
+            -X POST "${SUPABASE_URL%/}/rest/v1/rpc/get_branches" \
+            -H "apikey: $SUPABASE_ANON_KEY" "${auth[@]}" \
+            -H "Content-Type: application/json" -d '{}' > /dev/null
+          echo "Supabase responded OK"

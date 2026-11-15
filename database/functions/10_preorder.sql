@@ -1,74 +1,7 @@
--- 12: Pre-order (order ahead on the customer site, pay and pick up at the counter)
+-- 10 pre-order
+-- Order ahead on the customer site, pay and pick up at the counter. A pre-order only becomes a bill in complete_preorder().
 
--- Flow:  placed -> preparing -> ready -> collected          (cancelled / no_show can end it early)
--- A pre-order is NOT a bill. Nothing touches stock or sales until the cashier presses
--- "Collect & pay": complete_preorder() calls the existing checkout(), so the real bill, the
--- recipe-based stock deduction, the promotion, the payment and the member points all come from
--- the same code path as a normal POS sale.
--- Safe to run more than once.
-
--- 1. Tables
-create table if not exists preorder_setting (
-  branch_id               int primary key references branch,
-  is_enabled              boolean not null default true,
-  open_time               time    not null default '07:00',
-  close_time              time    not null default '20:00',
-  slot_minutes            int     not null default 15 check (slot_minutes between 5 and 60),
-  min_lead_minutes        int     not null default 15 check (min_lead_minutes between 0 and 240),
-  max_orders_per_slot     int     not null default 6  check (max_orders_per_slot between 1 and 100),
-  max_active_per_customer int     not null default 3  check (max_active_per_customer between 1 and 20),
-  check (close_time > open_time)
-);
-
-create table if not exists preorder (
-  preorder_id     int generated always as identity primary key,
-  branch_id       int not null references branch,
-  customer_phone  varchar(10) not null references customer,
-  pickup_time     timestamptz not null,
-  status          varchar(10) not null default 'placed'
-                  check (status in ('placed','preparing','ready','collected','cancelled','no_show')),
-  note            varchar(200),
-  subtotal        decimal(10,2) not null check (subtotal >= 0),
-  discount_amount decimal(10,2) not null default 0 check (discount_amount >= 0),
-  total_price     decimal(10,2) not null check (total_price >= 0),
-  promotion_id    int references promotion,
-  created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now(),
-  ready_at        timestamptz,
-  order_id        int references orders,      -- set when the cashier collects payment
-  cancel_reason   varchar(200)
-);
-
-create table if not exists preorder_item (
-  preorder_item_id int generated always as identity primary key,
-  preorder_id      int not null references preorder,
-  product_id       int not null references product,
-  size             varchar(10) not null,
-  quantity         int not null check (quantity between 1 and 20),
-  price            decimal(8,2) not null      -- unit price when ordered (modifiers are separate rows)
-);
-
-create table if not exists preorder_item_modifier (
-  preorder_item_modifier_id int generated always as identity primary key,
-  preorder_item_id int not null references preorder_item,
-  modifier_id      int not null references modifier,
-  price_at_order   decimal(8,2) not null
-);
-
-create index if not exists preorder_status_pickup_idx on preorder (status, pickup_time);
-create index if not exists preorder_customer_idx      on preorder (customer_phone, preorder_id desc);
-create index if not exists preorder_item_preorder_idx on preorder_item (preorder_id);
-create index if not exists preorder_item_mod_item_idx on preorder_item_modifier (preorder_item_id);
-
--- Same rule as member_otp / member_session: no direct table access, only through the functions below
-alter table preorder_setting       enable row level security;
-alter table preorder               enable row level security;
-alter table preorder_item          enable row level security;
-alter table preorder_item_modifier enable row level security;
-
-insert into preorder_setting (branch_id) select branch_id from branch on conflict do nothing;
-
--- 2. Internal helpers (not callable from the browser, see the revokes at the bottom)
+-- internal: settings row of a branch (creates it with defaults if missing)
 create or replace function preorder_cfg(p_branch int) returns preorder_setting
 language plpgsql security definer set search_path = public as $$
 declare c preorder_setting;
@@ -78,8 +11,7 @@ begin
   return c;
 end $$;
 
--- Pickup slots for today (store time, Asia/Bangkok). A slot is "available" when it is far enough
--- ahead (min_lead_minutes) and not full (max_orders_per_slot).
+-- internal: today's pickup slots in store time. A slot is available when it is far enough ahead (min_lead_minutes) and not full (max_orders_per_slot)
 create or replace function preorder_slots(p_branch int)
 returns table (slot_start timestamptz, taken int, capacity int, available boolean)
 language plpgsql security definer set search_path = public as $$
@@ -109,7 +41,7 @@ begin
      order by g.ts;
 end $$;
 
--- Ingredients that every active (not yet collected) pre-order will need, per pre-order
+-- internal: ingredients that all active (not yet collected) pre-orders still need, per pre-order
 create or replace function preorder_needs()
 returns table (preorder_id int, ingredient_id int, qty numeric)
 language sql stable security definer set search_path = public as $$
@@ -129,7 +61,7 @@ language sql stable security definer set search_path = public as $$
    group by p.preorder_id, x.ingredient_id;
 $$;
 
--- Same rule as the POS (bestPromotion in src/lib/pos.ts): the active promotion that discounts the most
+-- internal: same rule as the POS - the active promotion that gives the biggest discount
 create or replace function best_promotion(p_subtotal numeric) returns promotion
 language sql stable security definer set search_path = public as $$
   select pr.*
@@ -142,7 +74,7 @@ language sql stable security definer set search_path = public as $$
    limit 1;
 $$;
 
--- One pre-order as jsonb (shared by the customer and staff views)
+-- internal: one pre-order as json, shared by the customer and staff views
 create or replace function preorder_json(p_id int, p_staff boolean default false) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare p preorder%rowtype; c customer%rowtype; v jsonb;
@@ -178,7 +110,7 @@ begin
   return v;
 end $$;
 
--- 3. Customer side (identified by the member session token from the phone + OTP sign-in)
+-- internal: member session token -> phone number
 create or replace function member_phone(p_token uuid) returns varchar
 language plpgsql security definer set search_path = public as $$
 declare v_phone varchar;
@@ -188,7 +120,7 @@ begin
   return v_phone;
 end $$;
 
--- Today's pickup slots + opening hours (public, no sign-in needed to look)
+-- public: today's slots + opening hours (no sign-in needed to look)
 create or replace function get_pickup_slots() returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare v_branch int; c preorder_setting;
@@ -204,6 +136,7 @@ begin
         from preorder_slots(v_branch) s), '[]'::jsonb));
 end $$;
 
+-- customer places a pre-order. Prices always come from the database; checks slot capacity, the per-customer limit and that the ingredients are enough on top of other pre-orders
 create or replace function place_preorder(p_token uuid, p_pickup timestamptz, p_items jsonb, p_note text default null)
 returns int
 language plpgsql security definer set search_path = public as $$
@@ -316,6 +249,7 @@ begin
   return preorder_json(p_id) || jsonb_build_object('can_cancel', p.status = 'placed');
 end $$;
 
+-- customer can cancel only while the status is still placed
 create or replace function cancel_my_preorder(p_token uuid, p_id int) returns void
 language plpgsql security definer set search_path = public as $$
 declare v_phone varchar := member_phone(p_token); p preorder%rowtype;
@@ -329,8 +263,7 @@ begin
    where preorder_id = p_id;
 end $$;
 
--- 4. Staff side (same trust model as the other staff functions: assert_role on the employee id)
--- scope 'active' = still waiting for the customer, 'today' = everything that was due today (store time)
+-- staff: scope 'active' = still waiting for the customer, 'today' = everything due today
 create or replace function get_preorders(p_emp int, p_scope text default 'active') returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
@@ -355,6 +288,7 @@ begin
     'ready',     (select count(*) from preorder where status = 'ready'));
 end $$;
 
+-- staff moves a pre-order forward (preparing / ready) or ends it (cancelled needs a reason, no_show only after the pickup time)
 create or replace function set_preorder_status(p_emp int, p_id int, p_status text, p_reason text default null)
 returns void
 language plpgsql security definer set search_path = public as $$
@@ -390,7 +324,7 @@ begin
   end if;
 end $$;
 
--- Collect & pay: turns the pre-order into a real bill through the normal checkout()
+-- collect & pay: calls the normal checkout() so stock, points, promotion and reports work exactly like a POS sale. Refuses if the price changed since the customer ordered
 create or replace function complete_preorder(p_emp int, p_shift int, p_id int, p_method varchar) returns int
 language plpgsql security definer set search_path = public as $$
 declare p preorder%rowtype; v_items jsonb; v_order int; v_total numeric;
@@ -455,26 +389,3 @@ begin
     format('%s %s-%s', case when old.is_enabled then 'on' else 'off' end, to_char(old.open_time, 'HH24:MI'), to_char(old.close_time, 'HH24:MI')),
     format('%s %s-%s', case when p_enabled then 'on' else 'off' end, to_char(p_open, 'HH24:MI'), to_char(p_close, 'HH24:MI')));
 end $$;
-
--- 5. Permissions
---    Supabase lets the anon key execute every function in "public" by default, so the helpers that
---    would reveal other customers' orders are revoked explicitly. (The functions below are called
---    by other security-definer functions, which run as the owner and are not affected.)
-revoke execute on function preorder_cfg(int)              from public, anon, authenticated;
-revoke execute on function preorder_slots(int)            from public, anon, authenticated;
-revoke execute on function preorder_needs()               from public, anon, authenticated;
-revoke execute on function best_promotion(numeric)        from public, anon, authenticated;
-revoke execute on function preorder_json(int, boolean)    from public, anon, authenticated;
-revoke execute on function member_phone(uuid)             from public, anon, authenticated;
-
-grant execute on function get_pickup_slots()                                    to anon, authenticated;
-grant execute on function place_preorder(uuid, timestamptz, jsonb, text)       to anon, authenticated;
-grant execute on function get_my_preorders(uuid)                                to anon, authenticated;
-grant execute on function get_my_preorder(uuid, int)                            to anon, authenticated;
-grant execute on function cancel_my_preorder(uuid, int)                         to anon, authenticated;
-grant execute on function get_preorders(int, text)                              to anon, authenticated;
-grant execute on function get_preorder_counts(int)                              to anon, authenticated;
-grant execute on function set_preorder_status(int, int, text, text)            to anon, authenticated;
-grant execute on function complete_preorder(int, int, int, varchar)            to anon, authenticated;
-grant execute on function get_preorder_settings(int)                            to anon, authenticated;
-grant execute on function update_preorder_settings(int, boolean, time, time, int, int, int, int) to anon, authenticated;

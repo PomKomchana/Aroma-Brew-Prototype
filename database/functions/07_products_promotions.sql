@@ -1,3 +1,6 @@
+-- 07 products and promotions
+-- Owner screens S14 and S16.
+
 create or replace function get_products_admin(p_emp int) returns jsonb
 language plpgsql security definer set search_path = public as $$
 begin
@@ -12,6 +15,7 @@ begin
     ) order by p.product_id) from product p), '[]'::jsonb);
 end $$;
 
+-- create/edit a product and replace its recipe rows in one go. Price, availability and allergen changes are written to the audit log
 create or replace function upsert_product(p_emp int, p_product jsonb) returns int
 language plpgsql security definer set search_path = public as $$
 declare v_id int; v_old product%rowtype; r jsonb;
@@ -54,5 +58,35 @@ begin
     values (v_id, r->>'size', (r->>'ingredient_id')::int, (r->>'qty_per_serve')::numeric);
   end loop;
   perform log_audit(p_emp, 'Update recipe', 'product', v_id, null, jsonb_array_length(coalesce(p_product->'recipes', '[]'::jsonb)) || ' recipe rows');
+  return v_id;
+end $$;
+
+create or replace function list_promotions(p_emp int) returns jsonb
+language plpgsql security definer set search_path = public as $$
+begin
+  perform assert_role(p_emp, array['owner']);
+  return coalesce((select jsonb_agg(to_jsonb(p) order by promotion_id desc) from promotion p), '[]'::jsonb);
+end $$;
+
+create or replace function upsert_promotion(p_emp int, p_data jsonb) returns int
+language plpgsql security definer set search_path = public as $$
+declare v_id int;
+begin
+  perform assert_role(p_emp, array['owner']);
+  v_id := nullif(p_data->>'promotion_id', '')::int;
+  if v_id is null then
+    insert into promotion (name, discount_type, value, condition, start_date, end_date, status)
+    values (trim(p_data->>'name'), p_data->>'discount_type', (p_data->>'value')::numeric, nullif(p_data->>'condition', ''),
+            (p_data->>'start_date')::date, (p_data->>'end_date')::date, coalesce(p_data->>'status', 'active'))
+    returning promotion_id into v_id;
+    perform log_audit(p_emp, 'Create promotion', 'promotion', v_id, null, p_data->>'name');
+  else
+    update promotion set name = trim(p_data->>'name'), discount_type = p_data->>'discount_type', value = (p_data->>'value')::numeric,
+           condition = nullif(p_data->>'condition', ''), start_date = (p_data->>'start_date')::date,
+           end_date = (p_data->>'end_date')::date, status = coalesce(p_data->>'status', 'active')
+     where promotion_id = v_id;
+    if not found then raise exception 'Promotion not found'; end if;
+    perform log_audit(p_emp, 'Update promotion', 'promotion', v_id, null, p_data->>'name');
+  end if;
   return v_id;
 end $$;
