@@ -2,7 +2,7 @@
 
 # Aroma Brew
 
-A café and bakery management system (POS + recipe-based stock), built for the CPE230 database design and management course.
+A cafe and bakery management system (POS + recipe-based stock), for database design and management course.
 
 Cashiers get a point-of-sale screen, stock staff get inventory and purchasing, the owner gets reports, and customers get a small website for browsing the menu, ordering ahead and checking their points.
 
@@ -10,7 +10,7 @@ Cashiers get a point-of-sale screen, stock staff get inventory and purchasing, t
 
 - Frontend: React 18 + TypeScript + Vite
 - Backend / DB: Supabase (PostgreSQL). The main logic lives in database functions and the web app calls them with `supabase.rpc()`
-- Deploy: Vercel
+- Deploy: Netlify
 
 There is no separate Node server. The important things (stock deduction, points, pricing) happen inside the database, so if any step fails the whole transaction rolls back. You never end up with a bill whose stock wasn't deducted.
 
